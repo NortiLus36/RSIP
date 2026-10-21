@@ -1,5 +1,11 @@
 import { floorPlan, categories } from "@/config/floor-plan";
-import { snapshots, hourlyTraffic, inventory } from "@/data/mock";
+import {
+  snapshots,
+  hourlyTraffic,
+  inventory,
+  analyticsDataset,
+} from "@/data/mock";
+import type { RetailDataset } from "@/types/analytics";
 import type {
   Store,
   KpiSnapshot,
@@ -13,6 +19,7 @@ export interface RetailDataProvider {
   getTraffic(): Promise<HourlyTraffic[]>;
   getInventory(): Promise<InventoryItem[]>;
   getCategories(): Promise<ProductCategory[]>;
+  getAnalytics(): Promise<RetailDataset>;
 }
 export const retailProvider: RetailDataProvider = {
   getStore: async () => floorPlan,
@@ -20,13 +27,15 @@ export const retailProvider: RetailDataProvider = {
   getTraffic: async () => hourlyTraffic,
   getInventory: async () => inventory,
   getCategories: async () => categories,
+  getAnalytics: async () => analyticsDataset,
 };
 export async function loadDashboard() {
-  const [store, traffic, categories, inventory] = await Promise.all([
+  const [store, traffic, categories, inventory, dataset] = await Promise.all([
     retailProvider.getStore(),
     retailProvider.getTraffic(),
     retailProvider.getCategories(),
     retailProvider.getInventory(),
+    retailProvider.getAnalytics(),
   ]);
   const snapshot = await retailProvider.getSnapshot(store.id);
   if (!snapshot) throw new Error("Store KPI snapshot is missing");
@@ -38,5 +47,14 @@ export async function loadDashboard() {
   const objectSnapshots = results.filter(
     (item): item is KpiSnapshot => item !== undefined,
   );
-  return { store, snapshot, traffic, categories, objectSnapshots, inventory };
+  return {
+    store,
+    snapshot,
+    traffic,
+    categories,
+    objectSnapshots,
+    inventory,
+    dataset,
+  };
 }
+export type DashboardData = Awaited<ReturnType<typeof loadDashboard>>;

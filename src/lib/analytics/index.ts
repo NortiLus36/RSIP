@@ -20,5 +20,5 @@ export interface AnalyticsCalculator {
   }): Promise<KpiSnapshot>;
 }
 export function formatMetric(value: number, unit: string) {
-  return `${unit === "THB" ? "฿" : ""}${new Intl.NumberFormat("th-TH", { maximumFractionDigits: 1 }).format(value)}${unit === "%" ? "%" : ""}`;
+  return `${unit === "THB" ? "฿" : ""}${new Intl.NumberFormat("th-TH", { maximumFractionDigits: 2 }).format(value)}${unit === "%" ? "%" : ""}`;
 }

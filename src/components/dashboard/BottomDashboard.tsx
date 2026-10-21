@@ -1,88 +1,75 @@
 "use client";
-import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from "recharts";
-import {
-  Banknote,
-  ChartNoAxesCombined,
-  PackageX,
-  Users,
-  Clock3,
-  Smile,
-  ArrowUpRight,
-} from "lucide-react";
-import type { KpiSnapshot, HourlyTraffic } from "@/types";
+import { ChevronUp, ChevronDown } from "lucide-react";
+import type { KpiSnapshot, KpiKey } from "@/types";
 import { formatMetric, formatPeriod } from "@/lib/analytics";
-const icons = [Banknote, ChartNoAxesCombined, PackageX, Users, Clock3, Smile];
-export function BottomDashboard({ snapshot }: { snapshot: KpiSnapshot }) {
+const keys: KpiKey[] = [
+  "netSales",
+  "grossProfit",
+  "grossMargin",
+  "oosRate",
+  "traffic",
+  "waitTime",
+  "csat",
+];
+export function BottomDashboard({
+  snapshot,
+  expanded,
+  onToggle,
+}: {
+  snapshot: KpiSnapshot;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const netSales = snapshot.metrics.find((metric) => metric.key === "netSales");
   return (
-    <section className="dashboard">
-      <div className="dashboard-heading">
-        <h2>
-          ภาพรวมวันนี้ <span>Performance snapshot</span>
-        </h2>
-        <span>
-          {formatPeriod(snapshot.period)}{" "}
-          <b>{snapshot.source.toUpperCase()} DATA</b>
-        </span>
-      </div>
-      <div className="kpi-grid">
-        {snapshot.metrics.slice(0, 6).map((m, i) => {
-          const Icon = icons[i];
+    <section
+      className={`bottom-dashboard ${expanded ? "expanded" : "collapsed"}`}
+      aria-label="Store KPI dashboard"
+    >
+      <header>
+        <div>
+          <strong>Store Performance · {keys.length} KPIs</strong>
+          {!expanded && (
+            <span className="compact-sales">
+              Net Sales{" "}
+              {netSales
+                ? formatMetric(netSales.value, netSales.unit)
+                : "No Data"}
+            </span>
+          )}
+          <small>
+            DEMO · {formatPeriod(snapshot.period)} · OOS = stock snapshot
+          </small>
+        </div>
+        <button
+          aria-label={expanded ? "Collapse dashboard" : "Expand dashboard"}
+          aria-expanded={expanded}
+          onClick={onToggle}
+        >
+          {expanded ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
+          <span>{expanded ? "ย่อ" : "ขยาย"}</span>
+        </button>
+      </header>
+      <div className="store-kpis">
+        {keys.map((key) => {
+          const m = snapshot.metrics.find((m) => m.key === key);
           return (
-            <article className="kpi-card" key={m.key} title={m.definition}>
-              <div className="kpi-top">
-                <span>{m.label}</span>
-                <Icon size={16} />
-              </div>
-              <strong>
-                {formatMetric(m.value, m.unit)}
+            <article key={key} title={m?.definition}>
+              <span>{m?.label ?? key}</span>
+              <output data-store-kpi={key}>
+                {m ? formatMetric(m.value, m.unit) : "No Data"}
                 <small>
-                  {m.unit === "people"
-                    ? "คน"
-                    : m.unit === "minutes"
-                      ? "นาที"
+                  {m?.unit === "people"
+                    ? " คน"
+                    : m?.unit === "minutes"
+                      ? " นาที"
                       : ""}
                 </small>
-              </strong>
-              <div className={`kpi-change ${m.trend}`}>
-                <ArrowUpRight size={12} />
-                {m.change}
-                <span>เทียบช่วงก่อนหน้า (จำลอง)</span>
-              </div>
+              </output>
+              {expanded && <small>{m?.definition}</small>}
             </article>
           );
         })}
-      </div>
-    </section>
-  );
-}
-export function TrafficChart({ traffic }: { traffic: HourlyTraffic[] }) {
-  return (
-    <section className="traffic-card">
-      <div>
-        <strong>จำนวนลูกค้ารายชั่วโมง</strong>
-        <span>
-          Mock · {traffic[0]?.hour}–{traffic.at(-1)?.hour} · คน
-        </span>
-      </div>
-      <div className="traffic-chart">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={traffic}>
-            <XAxis
-              dataKey="hour"
-              tick={{ fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <Tooltip />
-            <Area
-              dataKey="customers"
-              name="ลูกค้า"
-              stroke="#4663c4"
-              fill="#e8edff"
-              strokeWidth={2}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
       </div>
     </section>
   );

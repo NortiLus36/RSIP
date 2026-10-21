@@ -79,15 +79,10 @@ export function CameraController({ store }: { store: Store }) {
     if (direction.y < 0.3) direction.y = 0.7;
     const frame = cameraFrame(
       object.transform,
-      Math.max(120, size.width - (size.width > 700 ? 350 : 60)) * 0.75,
-      Math.max(120, size.height - 150) * 0.8,
+      Math.max(120, size.width - 60) * 0.75,
+      Math.max(120, size.height - 100) * 0.8,
       direction.toArray(),
     );
-    if (size.width > 700)
-      frame.target.addScaledVector(
-        frame.right,
-        Math.min(140, size.width * 0.13) / frame.zoom,
-      );
     goal.current = {
       target: frame.target,
       position: frame.target.clone().add(frame.offset),

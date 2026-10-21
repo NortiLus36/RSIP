@@ -79,8 +79,15 @@ test("camera framing fits wide and narrow viewports and clamps close-up zoom", (
 test("provider delivers inventory and omits unavailable service-fixture KPIs", async () => {
   const data = await loadDashboard();
   assert.ok(data.inventory.length);
-  assert.equal(await retailProvider.getSnapshot("fixture-l-01"), undefined);
-  assert.equal(await retailProvider.getSnapshot("fixture-f-01"), undefined);
+  assert.ok(
+    (await retailProvider.getSnapshot("fixture-l-01"))?.metrics.some(
+      (m) => m.key === "waitTime",
+    ),
+  );
+  assert.equal(
+    (await retailProvider.getSnapshot("fixture-f-01"))?.metrics.length,
+    0,
+  );
   assert.ok(
     (await retailProvider.getSnapshot("fixture-m-01"))?.metrics.find(
       (m) => m.key === "netSales",
