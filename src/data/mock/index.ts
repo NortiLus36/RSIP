@@ -98,13 +98,21 @@ const weights = [18, 12, 15, 9, 7, 0, 6, 7, 4, 3, 6, 0, 13];
 export const snapshots = [
   snapshot(floorPlan.id, 1),
   ...floorPlan.zones.map((z, i) => snapshot(z.id, weights[i] / 100)),
-  ...floorPlan.fixtures.map((f) =>
-    snapshot(
-      f.id,
-      (weights[floorPlan.zones.findIndex((z) => z.id === f.zoneId)] / 100) *
-        0.2,
-    ),
-  ),
+  ...floorPlan.fixtures
+    .filter((f) => !["F", "L"].includes(f.zoneId))
+    .map((f) => {
+      const factor =
+        weights[floorPlan.zones.findIndex((z) => z.id === f.zoneId)] /
+        100 /
+        floorPlan.fixtures.filter((other) => other.zoneId === f.zoneId).length;
+      const data = snapshot(f.id, factor);
+      return {
+        ...data,
+        metrics: data.metrics.filter((metric) =>
+          ["netSales", "oosRate"].includes(metric.key),
+        ),
+      };
+    }),
 ];
 export const hourlyTraffic: HourlyTraffic[] = [
   76, 104, 138, 196, 228, 182, 163, 211, 278, 266,
@@ -112,10 +120,13 @@ export const hourlyTraffic: HourlyTraffic[] = [
   hour: `${String(i + 9).padStart(2, "0")}:00`,
   customers,
 }));
-export const inventory: InventoryItem[] = floorPlan.fixtures.map((f, i) => ({
-  sku: `MOCK-SKU-${String(i + 1).padStart(3, "0")}`,
-  shelfId: f.id,
-  categoryId: `category-${f.zoneId.toLowerCase()}`,
-  onHand: 40 + i * 7,
-  reorderPoint: 20,
-}));
+export const inventory: InventoryItem[] = floorPlan.fixtures
+  .filter((f) => !["checkout", "trolley", "pallet"].includes(f.kind))
+  .map((f, i) => ({
+    sku: `MOCK-SKU-${String(i + 1).padStart(3, "0")}`,
+    shelfId: f.id,
+    categoryId: `category-${f.zoneId.toLowerCase()}`,
+    onHand: 40 + i * 7,
+    reorderPoint: 20,
+    backroomOnHand: 90 + i * 11,
+  }));

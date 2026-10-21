@@ -26,7 +26,10 @@ test("inventory and analytics reference existing objects and reconcile traffic",
   for (const z of floorPlan.zones)
     assert.ok(snapshots.some((s) => s.objectId === z.id));
   for (const f of floorPlan.fixtures)
-    assert.ok(snapshots.some((s) => s.objectId === f.id));
+    assert.equal(
+      snapshots.some((s) => s.objectId === f.id),
+      !["F", "L"].includes(f.zoneId),
+    );
   assert.equal(
     hourlyTraffic.reduce((sum, h) => sum + h.customers, 0),
     snapshots[0].metrics.find((m) => m.key === "traffic")?.value,

@@ -16,6 +16,7 @@ export function StoreExplorer({ store }: { store: Store }) {
   const [supportOpen, setSupportOpen] = useState(false);
   const { selectedId, select } = useExplorer();
   const q = query.toLowerCase().trim();
+  const selectedFixture = store.fixtures.find((f) => f.id === selectedId);
   const visible = store.zones.filter((z) =>
     [
       z.id,
@@ -63,7 +64,7 @@ export function StoreExplorer({ store }: { store: Store }) {
           visible.map((z) => (
             <div key={z.id}>
               <button
-                className={`zone-row ${selectedId === z.id ? "selected" : ""}`}
+                className={`zone-row ${selectedId === z.id ? "selected" : selectedFixture?.zoneId === z.id ? "parent-selected" : ""}`}
                 onClick={() => select(z.id)}
                 aria-pressed={selectedId === z.id}
               >
@@ -91,9 +92,13 @@ export function StoreExplorer({ store }: { store: Store }) {
                       className={`fixture-row ${selectedId === f.id ? "selected" : ""}`}
                       key={f.id}
                       onClick={() => select(f.id)}
+                      aria-pressed={selectedId === f.id}
                     >
                       <Box size={12} />
-                      {f.id}
+                      <span>
+                        {f.name}
+                        <small>{f.id}</small>
+                      </span>
                     </button>
                   ))}
             </div>

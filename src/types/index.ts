@@ -22,7 +22,19 @@ export interface Fixture {
   id: string;
   zoneId: string;
   name: string;
-  kind: "shelf" | "counter" | "rack";
+  kind:
+    | "shelf"
+    | "produce"
+    | "refrigerator"
+    | "warehouse"
+    | "pallet"
+    | "trolley"
+    | "bakery"
+    | "checkout"
+    | "clothes"
+    | "folded"
+    | "shoes";
+  description: string;
   transform: Transform;
 }
 export interface Shelf extends Fixture {
@@ -77,4 +89,5 @@ export interface InventoryItem {
   categoryId: string;
   onHand: number;
   reorderPoint: number;
+  backroomOnHand?: number;
 }

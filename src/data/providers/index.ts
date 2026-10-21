@@ -22,10 +22,11 @@ export const retailProvider: RetailDataProvider = {
   getCategories: async () => categories,
 };
 export async function loadDashboard() {
-  const [store, traffic, categories] = await Promise.all([
+  const [store, traffic, categories, inventory] = await Promise.all([
     retailProvider.getStore(),
     retailProvider.getTraffic(),
     retailProvider.getCategories(),
+    retailProvider.getInventory(),
   ]);
   const snapshot = await retailProvider.getSnapshot(store.id);
   if (!snapshot) throw new Error("Store KPI snapshot is missing");
@@ -37,5 +38,5 @@ export async function loadDashboard() {
   const objectSnapshots = results.filter(
     (item): item is KpiSnapshot => item !== undefined,
   );
-  return { store, snapshot, traffic, categories, objectSnapshots };
+  return { store, snapshot, traffic, categories, objectSnapshots, inventory };
 }

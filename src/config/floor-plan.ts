@@ -5,6 +5,7 @@ import type {
   SupportArea,
   ProductCategory,
 } from "@/types";
+import { buildFixtures } from "./fixtures";
 export const transform = (
   x: number,
   z: number,
@@ -206,21 +207,7 @@ export const floorPlan: Store = {
     [-16, -14],
   ],
   zones,
-  fixtures: zones
-    .filter((z) => !["D", "F", "L"].includes(z.id))
-    .map((z) => ({
-      id: `fixture-${z.id.toLowerCase()}-01`,
-      zoneId: z.id,
-      name: `${z.name} · พื้นที่ตัวอย่าง`,
-      kind: "shelf",
-      transform: transform(
-        z.transform.position[0],
-        z.transform.position[2],
-        z.transform.size[0] * 0.65,
-        z.transform.size[2] * 0.28,
-        0.65,
-      ),
-    })),
+  fixtures: buildFixtures(zones),
   supportAreas: [
     support("loading", "Loading Dock", "ทางรับสินค้า", 13, -20, 4, 8),
     support("cold", "Cold Room", "ห้องเย็น", 10, -13, 4, 5),
@@ -241,6 +228,9 @@ export const categories: ProductCategory[] = zones.map((z) => ({
   description: z.description,
 }));
 export const sceneConfig = {
-  camera: { position: [43, 48, 55] as [number, number, number], zoom: 12 },
+  camera: { position: [30, 58, 48] as [number, number, number], zoom: 12 },
   target: [0, 0, 0] as [number, number, number],
+  minZoom: 2,
+  maxZoom: 45,
+  focusSeconds: 0.7,
 };

@@ -16,6 +16,7 @@ import type {
   KpiSnapshot,
   HourlyTraffic,
   ProductCategory,
+  InventoryItem,
 } from "@/types";
 import { StoreExplorer } from "@/components/panels/StoreExplorer";
 import { ObjectInspector } from "@/components/panels/ObjectInspector";
@@ -31,12 +32,14 @@ export function Workspace({
   traffic,
   categories,
   objectSnapshots,
+  inventory,
 }: {
   store: Store;
   snapshot: KpiSnapshot;
   traffic: HourlyTraffic[];
   categories: ProductCategory[];
   objectSnapshots: KpiSnapshot[];
+  inventory: InventoryItem[];
 }) {
   const [sidebar, setSidebar] = useState(true);
   const [tab, setTab] = useState("Explore");
@@ -121,7 +124,7 @@ export function Workspace({
                 <strong>Demo Store 001</strong>
                 <small>แปลนร้านค้า · มุมมองไอโซเมตริก</small>
               </div>
-              <span className="phase-badge">PHASE 01</span>
+              <span className="phase-badge">PHASE 02</span>
             </div>
             <SceneHost store={store} />
             <SceneToolbar />
@@ -129,10 +132,12 @@ export function Workspace({
               store={store}
               categories={categories}
               snapshots={objectSnapshots}
+              inventory={inventory}
             />
             <div className="scene-bottom">
               <span>
-                <i /> 3D EXPLORER <b>•</b> {store.zones.length} ZONES
+                <i /> 3D EXPLORER <b>•</b> {store.zones.length} ZONES <b>•</b>{" "}
+                {store.fixtures.length} FIXTURES
               </span>
               <span>ลากเพื่อหมุน · เลื่อนเพื่อซูม · คลิกขวาเพื่อแพน</span>
             </div>
@@ -157,7 +162,7 @@ export function Workspace({
                 <span>
                   {tab === "Operations"
                     ? "ข้อมูลจำลองสำหรับการเตรียมงานวิเคราะห์ · ระบบปฏิบัติการเต็มรูปแบบจะพัฒนาใน Phase ถัดไป"
-                    : "เลือกแผนกจากรายการด้านซ้าย เพื่อดูรายละเอียดและตัวชี้วัดจำลอง"}
+                    : "ชี้วัตถุเพื่อดูชื่อ · คลิกเลือกชั้นวาง · เลือกจากรายการเพื่อโฟกัสกล้อง"}
                 </span>
               </p>
               <ArrowUpRight size={18} />

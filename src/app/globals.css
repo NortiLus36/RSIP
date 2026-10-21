@@ -1065,3 +1065,110 @@ footer b {
     font-size: 9px;
   }
 }
+/* Phase 2: give the miniature store room for inspection. */
+.scene-card {
+  min-height: 490px;
+}
+.scene-tooltip {
+  background: #172844;
+  color: white;
+  border-radius: 7px;
+  padding: 9px 12px;
+  box-shadow: 0 4px 15px #17284422;
+  white-space: nowrap;
+  font-size: 10px;
+}
+.scene-tooltip strong {
+  display: block;
+  font-weight: 500;
+}
+.scene-tooltip span {
+  display: block;
+  color: #b4c5df;
+  font-size: 8px;
+  margin-top: 4px;
+}
+.inspector-actions {
+  display: flex;
+  gap: 7px;
+  margin: 15px 0;
+}
+.inspector-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: 1;
+  padding: 8px 5px;
+  background: #edf1fb;
+  border: 1px solid #dfe6f6;
+  border-radius: 6px;
+  font-size: 9px;
+  color: #4560a8;
+}
+.zone-row.parent-selected {
+  border-color: #e0e6f5;
+  background: #f7f9fd;
+}
+.fixture-row {
+  padding: 8px 6px 8px 41px;
+  font-size: 9px;
+  border-radius: 5px;
+}
+.fixture-row small {
+  display: block;
+  font-size: 8px;
+  color: #9ca8ba;
+  margin-top: 3px;
+}
+.inspector {
+  width: 265px;
+}
+@media (max-height: 800px) and (min-width: 761px) {
+  .scene-card {
+    min-height: 420px;
+  }
+}
+@media (max-width: 760px) {
+  .scene-card {
+    min-height: 510px;
+  }
+  .inspector {
+    top: auto;
+    bottom: 36px;
+    max-height: 240px;
+    width: 225px;
+  }
+  .scene-caption {
+    top: 70px;
+  }
+  .scene-toolbar {
+    gap: 1px;
+  }
+  .scene-toolbar button {
+    width: 29px;
+  }
+}
+.canvas-container canvas:focus-visible {
+  outline: 2px solid #758bc5;
+  outline-offset: -3px;
+}
+.inspector-top {
+  position: sticky;
+  top: -16px;
+  z-index: 1;
+  background: #fffffff8;
+  padding: 8px 0;
+}
+.inspector > dl {
+  font-size: 10px;
+}
+.inspector-object-id {
+  display: inline-block;
+  font-size: 9px;
+  padding: 4px 7px;
+  border: 1px solid #e1e7f1;
+  color: #7587a7;
+  background: #f8faff;
+  border-radius: 4px;
+}

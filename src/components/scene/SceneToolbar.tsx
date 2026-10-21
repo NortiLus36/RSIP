@@ -1,5 +1,12 @@
 "use client";
-import { RotateCcw, Tags, Grid2X2, Orbit, Layers } from "lucide-react";
+import {
+  RotateCcw,
+  Tags,
+  Grid2X2,
+  Orbit,
+  Layers,
+  BrickWall,
+} from "lucide-react";
 import { useExplorer } from "@/stores/explorer";
 export function SceneToolbar() {
   const s = useExplorer();
@@ -14,6 +21,7 @@ export function SceneToolbar() {
           { key: "labels", icon: Tags, label: "Toggle labels" },
           { key: "grid", icon: Grid2X2, label: "Toggle grid" },
           { key: "autoRotate", icon: Orbit, label: "Auto rotate" },
+          { key: "walls", icon: BrickWall, label: "Toggle walls" },
         ] as const
       ).map(({ key, icon: Icon, label }) => (
         <button
