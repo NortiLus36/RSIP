@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { SceneHtml as Html } from "../SceneHtml";
 import type { Group } from "three";
 import type { Store } from "@/types";
 import { storeEnvironment } from "@/config/floor-plan";
@@ -138,9 +138,7 @@ export function StoreActivity({ store }: { store: Store }) {
               ref={(el) => {
                 doorBadges.current[i] = el;
               }}
-            >
-              {i === 0 ? "ENTRANCE" : "EXIT"} · AUTO
-            </span>
+            />
           </Html>
         </group>
       ))}

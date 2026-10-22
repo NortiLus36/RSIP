@@ -1,13 +1,24 @@
-import { floorPlan } from "@/config/floor-plan";
+import { productCatalog } from "./catalog";
+import { inventoryForSku } from "@/lib/analytics/catalog";
 import type { InventoryItem } from "@/types";
-// SKU/object identities retain the Phase 2 order. Two shelf stockouts are now explicit observations.
-export const inventory: InventoryItem[] = floorPlan.fixtures
-  .filter((f) => !["checkout", "trolley", "pallet"].includes(f.kind))
-  .map((f, i) => ({
-    sku: `MOCK-SKU-${String(i + 1).padStart(3, "0")}`,
-    shelfId: f.id,
-    categoryId: `category-${f.zoneId.toLowerCase()}`,
-    onHand: i === 0 || i === 10 ? 0 : 40 + i * 7,
-    reorderPoint: 20,
-    backroomOnHand: 90 + i * 11,
-  }));
+// Compatibility view for existing analytics. Canonical location stock lives in catalog.
+export const inventory: InventoryItem[] = productCatalog.shelfInventory.map(
+  (r) => {
+    const p = productCatalog.products.find((p) => p.sku === r.sku)!;
+    const category = productCatalog.categories.find(
+      (c) => c.id === p.categoryId,
+    )!;
+    return {
+      sku: r.sku,
+      shelfId: r.fixtureId,
+      categoryId: category.parentId!,
+      onHand: r.shelfStock,
+      reorderPoint: productCatalog.planning.find((p) => p.sku === r.sku)!
+        .safetyStock,
+      backroomOnHand:
+        productCatalog.shelfInventory.find((s) => s.sku === r.sku) === r
+          ? inventoryForSku(productCatalog, r.sku).backroomStock
+          : 0,
+    };
+  },
+);

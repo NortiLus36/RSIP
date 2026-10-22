@@ -2,7 +2,7 @@
 import { ChevronUp, ChevronDown } from "lucide-react";
 import type { KpiSnapshot, KpiKey } from "@/types";
 import { formatMetric, formatPeriod } from "@/lib/analytics";
-import { KPIInfoPopover } from "@/components/analytics/KPIInfoPopover";
+import { KPIFieldHeader } from "@/components/analytics/KPIFieldHeader";
 const keys: KpiKey[] = [
   "netSales",
   "grossProfit",
@@ -56,10 +56,7 @@ export function BottomDashboard({
           const m = snapshot.metrics.find((m) => m.key === key);
           return (
             <article key={key} title={m?.definition}>
-              <span>
-                {m?.label ?? key}
-                <KPIInfoPopover topic={key} />
-              </span>
+              <KPIFieldHeader label={m?.label ?? key} topic={key} />
               <output data-store-kpi={key}>
                 {m ? formatMetric(m.value, m.unit) : "No Data"}
                 <small>

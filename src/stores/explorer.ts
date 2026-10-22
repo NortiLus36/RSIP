@@ -1,6 +1,8 @@
 import { create } from "zustand";
 interface ExplorerState {
   selectedId: string | null;
+  selectedSku: string | null;
+  selectSku: (sku: string, fixtureId: string) => void;
   labels: boolean;
   grid: boolean;
   autoRotate: boolean;
@@ -17,6 +19,15 @@ interface ExplorerState {
 }
 export const useExplorer = create<ExplorerState>((set) => ({
   selectedId: null,
+  selectedSku: null,
+  selectSku: (sku, fixtureId) =>
+    set((s) => ({
+      selectedId: fixtureId,
+      selectedSku: sku,
+      hoveredId: null,
+      autoRotate: false,
+      focusVersion: s.focusVersion + 1,
+    })),
   labels: true,
   grid: false,
   autoRotate: false,
@@ -27,6 +38,7 @@ export const useExplorer = create<ExplorerState>((set) => ({
   select: (id, focus = true) =>
     set((s) => ({
       selectedId: id,
+      selectedSku: null,
       hoveredId: !id || focus ? null : s.hoveredId,
       autoRotate: false,
       focusVersion: s.focusVersion + (id && focus ? 1 : 0),

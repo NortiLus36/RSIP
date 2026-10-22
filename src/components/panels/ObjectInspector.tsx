@@ -11,12 +11,17 @@ import type { DashboardData } from "@/data/providers";
 import { useExplorer } from "@/stores/explorer";
 import { fixtureTypeNames } from "@/config/fixtures";
 import { formatMetric, formatPeriod } from "@/lib/analytics";
-import { filterForObject } from "@/lib/analytics/selectors";
+import {
+  filterForObject,
+  currentRows,
+  salesTotals,
+} from "@/lib/analytics/selectors";
 import { InventoryPlanner } from "@/components/analytics/InventoryPlanner";
 import { AnalyticsView } from "@/components/analytics/AnalyticsView";
 import { SalesTrendChart } from "@/components/analytics/Charts";
 import { SpatialInspector } from "@/components/spatial/SpatialInspector";
-import { KPIInfoPopover } from "@/components/analytics/KPIInfoPopover";
+import { KPIFieldHeader } from "@/components/analytics/KPIFieldHeader";
+import { CatalogBrowser } from "./CatalogBrowser";
 export function ObjectInspector({
   data,
   collapsed,
@@ -27,10 +32,11 @@ export function ObjectInspector({
   onCollapse: () => void;
 }) {
   const selected = useExplorer((s) => s.selectedId);
+  const selectedSku = useExplorer((s) => s.selectedSku);
   if (!selected) return null;
   return (
     <InspectorBody
-      key={selected}
+      key={`${selected}:${selectedSku ?? ""}`}
       data={data}
       selected={selected}
       collapsed={collapsed}
@@ -49,7 +55,8 @@ function InspectorBody({
   collapsed: boolean;
   onCollapse: () => void;
 }) {
-  const [tab, setTab] = useState("Overview");
+  const selectedSku = useExplorer((s) => s.selectedSku);
+  const [tab, setTab] = useState(selectedSku ? "Inventory" : "Overview");
   const { store, dataset, inventory } = data;
   const zone = store.zones.find((z) => z.id === selected);
   const fixture = store.fixtures.find((f) => f.id === selected);
@@ -57,7 +64,41 @@ function InspectorBody({
   const object = zone ?? fixture ?? support;
   const parent = zone ?? store.zones.find((z) => z.id === fixture?.zoneId);
   if (!object) return null;
-  const snapshot = data.objectSnapshots.find((s) => s.objectId === selected);
+  const fixtureSnapshot = data.objectSnapshots.find(
+    (s) => s.objectId === selected,
+  );
+  const totals = selectedSku
+    ? salesTotals(currentRows(dataset, { sku: selectedSku }))
+    : null;
+  const skuStock = data.catalog.shelfInventory
+    .filter((r) => r.sku === selectedSku)
+    .reduce((s, r) => s + r.shelfStock, 0);
+  const skuValues = totals
+    ? {
+        netSales: totals.sales,
+        grossProfit: totals.grossProfit,
+        grossMargin: totals.sales
+          ? (totals.grossProfit / totals.sales) * 100
+          : null,
+        oosRate: skuStock === 0 ? 100 : 0,
+      }
+    : null;
+  const snapshot =
+    skuValues && fixtureSnapshot
+      ? {
+          ...fixtureSnapshot,
+          metrics: fixtureSnapshot.metrics
+            .filter(
+              (m) =>
+                m.key in skuValues &&
+                skuValues[m.key as keyof typeof skuValues] !== null,
+            )
+            .map((m) => ({
+              ...m,
+              value: skuValues[m.key as keyof typeof skuValues]!,
+            })),
+        }
+      : fixtureSnapshot;
   const items = inventory.filter((i) =>
     fixture
       ? i.shelfId === fixture.id
@@ -65,7 +106,9 @@ function InspectorBody({
         ? store.fixtures.some((f) => f.id === i.shelfId && f.zoneId === zone.id)
         : false,
   );
-  const filter = filterForObject(store, selected);
+  const filter = selectedSku
+    ? { sku: selectedSku }
+    : filterForObject(store, selected);
   const checkout = fixture?.kind === "checkout" || zone?.id === "L";
   const history = [...new Set(dataset.checkout.map((r) => r.date))].map(
     (date) => {
@@ -89,7 +132,10 @@ function InspectorBody({
       <header className="drawer-header">
         <div>
           <span className="eyebrow">OBJECT INSPECTOR · DEMO</span>
-          <h2>{object.name}</h2>
+          <h2>
+            {data.catalog.products.find((p) => p.sku === selectedSku)?.nameTh ??
+              object.name}
+          </h2>
           <code>{object.id}</code>
           <small>
             {parent ? `${parent.id} · ${parent.nameTh}` : support?.nameTh}
@@ -183,10 +229,7 @@ function InspectorBody({
                   )
                   .map((m) => (
                     <div key={m.key} title={m.definition}>
-                      <span>
-                        {m.label}
-                        <KPIInfoPopover topic={m.key} />
-                      </span>
+                      <KPIFieldHeader label={m.label} topic={m.key} />
                       <strong data-inspector-kpi={m.key}>
                         {formatMetric(m.value, m.unit)}
                         {m.unit === "minutes" ? " นาที" : ""}
@@ -195,27 +238,6 @@ function InspectorBody({
                   ))
               ) : (
                 <p className="empty-state">KPI: No Data</p>
-              )}
-              {items.length > 0 && (
-                <>
-                  <div>
-                    <span>Shelf Stock</span>
-                    <strong>
-                      {items
-                        .reduce((s, i) => s + i.onHand, 0)
-                        .toLocaleString("th-TH")}{" "}
-                      ชิ้น
-                    </strong>
-                  </div>
-                  <div>
-                    <span>Backroom Stock</span>
-                    <strong>
-                      {items.every((i) => i.backroomOnHand !== undefined)
-                        ? `${items.reduce((s, i) => s + (i.backroomOnHand ?? 0), 0).toLocaleString("th-TH")} ชิ้น`
-                        : "No Data"}
-                    </strong>
-                  </div>
-                </>
               )}
             </div>
             <dl>
@@ -239,6 +261,7 @@ function InspectorBody({
                   ?.name ?? "No Data"}
               </dd>
             </dl>
+            {!checkout && <CatalogBrowser data={data} objectId={selected} />}
             <p className="form-hint">
               ยอดขาย/กำไรของ Zone รวมจาก SKU ของ Fixture ภายใน Zone; OOS ใช้
               stock snapshot ไม่เฉลี่ยเปอร์เซ็นต์จากชั้นวาง
@@ -271,7 +294,25 @@ function InspectorBody({
                 Time ใน Overview และ Analytics
               </p>
             ) : (
-              <InventoryPlanner dataset={dataset} items={items} />
+              <>
+                {!selectedSku && (
+                  <CatalogBrowser data={data} objectId={selected} />
+                )}
+                <InventoryPlanner
+                  dataset={dataset}
+                  items={items}
+                  catalog={data.catalog}
+                  initialSku={selectedSku}
+                  onSkuChange={(sku) =>
+                    useExplorer
+                      .getState()
+                      .selectSku(
+                        sku,
+                        items.find((i) => i.sku === sku)?.shelfId ?? selected,
+                      )
+                  }
+                />
+              </>
             )}
           </section>
           <section
@@ -285,8 +326,10 @@ function InspectorBody({
               (checkout ? (
                 <div className="chart-card">
                   <h3>
-                    เวลารอชำระเงินย้อนหลัง
-                    <KPIInfoPopover topic="trend" />
+                    <KPIFieldHeader
+                      label="เวลารอชำระเงินย้อนหลัง"
+                      topic="trend"
+                    />
                   </h3>
                   <p className="data-period">
                     รายวัน · {dataset.checkout[0].date} – {dataset.asOf} · นาที

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Html, useCursor } from "@react-three/drei";
+import { useCursor } from "@react-three/drei";
+import { SceneHtml as Html } from "./SceneHtml";
 import type { Store } from "@/types";
 import { useExplorer } from "@/stores/explorer";
 import { findSceneObject } from "@/lib/scene/camera";

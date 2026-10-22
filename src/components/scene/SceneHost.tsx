@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import { Component, type ReactNode } from "react";
 import type { Store } from "@/types";
 import type { SpatialDataset } from "@/types/spatial";
+import { SceneHtmlLayer } from "./SceneHtml";
 const StoreScene = dynamic(() => import("./StoreScene"), {
   ssr: false,
   loading: () => (
@@ -47,7 +48,9 @@ export function SceneHost({
   return (
     <div className="canvas-container">
       <SceneBoundary>
-        <StoreScene store={store} spatial={spatial} />
+        <SceneHtmlLayer>
+          <StoreScene store={store} spatial={spatial} />
+        </SceneHtmlLayer>
       </SceneBoundary>
     </div>
   );

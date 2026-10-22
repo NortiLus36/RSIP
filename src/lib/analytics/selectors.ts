@@ -55,7 +55,7 @@ export function categoryChart(rows: SalesRecord[], store: Store): ChartDatum[] {
     .map((z) => {
       const total = salesTotals(rows.filter((r) => r.zoneId === z.id));
       return {
-        name: `${z.id} · ${z.name}`,
+        name: z.nameTh,
         sales: total.sales,
         grossProfit: total.grossProfit,
       };

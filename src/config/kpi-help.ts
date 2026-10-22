@@ -194,9 +194,9 @@ export const chartHelp: Record<string, HelpTopic> = {
     "กราฟเปรียบเทียบ / Bar",
     "เหมาะกับการเปรียบเทียบหมวดหรือทางเลือก",
     "รวมค่าของแต่ละหมวด",
-    "X = หมวด/Scenario; Y = THB หรือ occupancy ตามป้าย",
-    "แท่งสูงกว่าคือค่าที่วัดสูงกว่า",
-    "A contribution 400, B 450",
+    "กราฟแท่งแนวนอน: X = ยอดขาย/กำไรส่วนเพิ่ม (บาท) หรือจำนวนคน; Y = หมวดสินค้า/โซน/ทางเลือก ตามป้าย",
+    "แท่งยาวกว่าคือค่าที่วัดสูงกว่า",
+    "ทางเลือก A มีกำไรส่วนเพิ่ม 400 บาท ทางเลือก B มี 450 บาท",
     "เทียบชุดข้อมูลและช่วงเวลาเดียวกัน",
     "สีใช้แยกหมวด/ไฮไลต์ ไม่ใช่เหตุผลเชิงสาเหตุ; Top Zones ใช้แกนหมวดแนวตั้งและจำนวนคนแนวนอน",
   ),
@@ -212,7 +212,11 @@ export const chartHelp: Record<string, HelpTopic> = {
   ),
 };
 const aliases: Record<string, string> = {
+  "Foot Traffic": "traffic",
+  "Average Wait Time": "waitTime",
   "Net Sales": "netSales",
+  กำไรขั้นต้น: "grossProfit",
+  อัตรากำไรขั้นต้น: "grossMargin",
   ยอดขายสุทธิ: "netSales",
   "Gross Profit": "grossProfit",
   "Gross Margin": "grossMargin",
@@ -231,7 +235,131 @@ const aliases: Record<string, string> = {
   traffic: "traffic",
   csat: "csat",
 };
+const inputDefinitions: Record<string, [string, string, string]> = {
+  "Daily Demand": [
+    "ความต้องการเฉลี่ยต่อวันของ SKU ที่เลือก",
+    "หน่วย SKU ต่อวัน ใช้คูณ Lead Time",
+    "10 หน่วย/วัน × 3 วัน = 30 หน่วย",
+  ],
+  "Lead Time": [
+    "จำนวนวันรอรับสินค้า",
+    "วันนับจากวันจำลอง",
+    "รอ 3 วันและใช้วันละ 10 หน่วย ต้องใช้ระหว่างรอ 30 หน่วย",
+  ],
+  "Safety Stock": [
+    "สินค้าสำรองเผื่อความไม่แน่นอน",
+    "Target Stock = Lead Time Demand + Safety Stock",
+    "ความต้องการระหว่างรอ 30 + สำรอง 5 = 35 หน่วย",
+  ],
+  "Available Stock": [
+    "สินค้าบนชั้นและคลังที่พร้อมใช้หลังหักของจอง",
+    "Shelf + Backroom − Reserved",
+    "บนชั้น 5 + คลัง 30 − จอง 2 = 33 หน่วย",
+  ],
+  "Incoming Stock": [
+    "สินค้าที่กำลังเข้ามาและผ่านเงื่อนไขกำหนดส่ง",
+    "นับเมื่อ Arrival ≤ Lead Time",
+    "กำลังเข้า 20 หน่วยใน 2 วัน โดยรอ 3 วัน จึงนับ 20 หน่วย",
+  ],
+  "Incoming Arrival": [
+    "วันจากปัจจุบันจนสินค้ากำลังเข้ามาถึง",
+    "นับ Incoming เมื่อ Arrival ≤ Lead Time",
+    "มาถึงวันที่ 5 แต่รอ 3 วัน ไม่นับของกำลังเข้า",
+  ],
+  "Lead Time Demand": [
+    "ความต้องการสินค้าตลอดช่วงรอ",
+    "Daily Demand × Lead Time",
+    "10 × 3 = 30 หน่วย",
+  ],
+  "Target Stock": [
+    "สต็อกเป้าหมายรวมสำรอง",
+    "Lead Time Demand + Safety Stock",
+    "30 + 5 = 35 หน่วย",
+  ],
+  "Cost of Goods Sold": [
+    "ต้นทุนของสินค้าที่ขายในช่วงที่เลือก",
+    "Gross Profit = Net Sales − COGS",
+    "ยอดขาย 1,000 − ต้นทุน 650 = กำไร 350 บาท",
+  ],
+  "OOS SKU": [
+    "จำนวน SKU ที่สินค้าบนชั้นเป็นศูนย์ แม้ยังมีของในคลัง",
+    "OOS Rate = OOS SKU / Checked SKU × 100",
+    "ขาดชั้น 2 จาก 50 SKU = 4%",
+  ],
+  "Checked SKU": [
+    "จำนวน SKU ที่ตรวจสต็อกในขอบเขตเดียวกัน",
+    "เป็นตัวหารของ OOS Rate",
+    "ตรวจ 50 SKU พบขาด 2 = 4%",
+  ],
+  "Waste Cost": [
+    "มูลค่าต้นทุนสินค้าสูญเสียในช่วงที่เลือก",
+    "Waste / Sales × 100",
+    "สูญเสีย 20 / ยอดขาย 1,000 × 100 = 2%",
+  ],
+  "Labor Hours": [
+    "ชั่วโมงแรงงานรวมของพนักงานในช่วงที่เลือก",
+    "Sales / Labor Hours",
+    "ยอดขาย 1,000 / แรงงาน 10 ชั่วโมง = 100 บาท/ชั่วโมง",
+  ],
+  "Labor Cost": [
+    "ต้นทุนแรงงานรวมในช่วงที่เลือก",
+    "Labor Cost / Sales × 100",
+    "ต้นทุนแรงงาน 200 / ยอดขาย 1,000 = 20%",
+  ],
+  "Satisfied Responses": [
+    "จำนวนผู้ตอบที่ให้คะแนนพึงพอใจ",
+    "Satisfied / Total CSAT Responses × 100",
+    "พึงพอใจ 92 จาก 100 คน = 92%",
+  ],
+  "Total CSAT Responses": [
+    "จำนวนผู้ตอบแบบสอบถามความพึงพอใจทั้งหมด",
+    "เป็นตัวหารของ CSAT",
+    "ผู้ตอบทั้งหมด 100 คน พึงพอใจ 92 คน = 92%",
+  ],
+  Promoters: [
+    "ผู้ตอบที่สนับสนุนและแนะนำร้าน",
+    "(Promoters − Detractors) / ผู้ตอบทั้งหมด × 100",
+    "120 สนับสนุน − 30 ไม่สนับสนุน จาก 200 คน = NPS 45",
+  ],
+  Passives: [
+    "ผู้ตอบเป็นกลาง นับในฐานผู้ตอบ NPS",
+    "Total = Promoters + Passives + Detractors",
+    "120 + 50 + 30 = ผู้ตอบ 200 คน",
+  ],
+  Detractors: [
+    "ผู้ตอบที่ไม่สนับสนุนร้าน",
+    "(Promoters − Detractors) / ผู้ตอบทั้งหมด × 100",
+    "สนับสนุน 120 ไม่สนับสนุน 30 จาก 200 คน = 45",
+  ],
+  "Total NPS Responses": [
+    "ผู้ตอบ NPS ทั้งสามกลุ่มรวมกัน",
+    "Promoters + Passives + Detractors",
+    "120 + 50 + 30 = 200 คน",
+  ],
+  Complaints: [
+    "จำนวนข้อร้องเรียนในช่วงที่เลือก",
+    "Complaints / Transactions × 1,000",
+    "3 ข้อร้องเรียน / 2,000 ธุรกรรม = 1.5 ต่อพันธุรกรรม",
+  ],
+  Transactions: [
+    "จำนวนรายการชำระเงินทั้งหมดในช่วงที่เลือก",
+    "ใช้เป็นฐานอัตราข้อร้องเรียนและมูลค่าตะกร้า",
+    "ยอดขาย 1,000 / 10 ธุรกรรม = 100 บาทต่อธุรกรรม",
+  ],
+};
 export function helpFor(key: string): HelpTopic {
+  const definition = inputDefinitions[key];
+  if (definition)
+    return topic(
+      key,
+      definition[0],
+      definition[1],
+      "ข้อมูลของ SKU/ช่วงเวลาปัจจุบันตามหน่วยที่แสดงบนแบบฟอร์ม",
+      "เทียบผลโดยใช้ SKU หน่วยและช่วงเวลาเดียวกัน",
+      definition[2],
+      "ปรับค่าเพื่อจำลองและใช้ Reset Demo คืนค่าเริ่มต้น",
+      "ข้อมูลสังเคราะห์ การแก้ Input ไม่เปลี่ยนสต็อกจริง; ตัวหารศูนย์แสดง N/A",
+    );
   return (
     chartHelp[key] ??
     kpiHelp[aliases[key] ?? key] ??

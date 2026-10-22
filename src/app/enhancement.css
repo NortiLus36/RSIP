@@ -262,3 +262,220 @@
   margin: 3px 0 0;
   line-height: 1.7;
 }
+.phase3 .kpi-field-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+.phase3 .kpi-field-header .kpi-field-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.phase3 .kpi-field-header .info-button {
+  margin: 0;
+  flex: 0 0 17px;
+}
+.phase3 .kpi-field-header > small {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.phase3 .calculator-inputs label > .kpi-field-header {
+  justify-content: flex-start;
+}
+.phase3 .calculator-inputs .kpi-field-title {
+  color: inherit;
+  font-size: inherit;
+}
+.tree-line {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.tree-toggle {
+  flex: 0 0 18px;
+  padding: 4px 0;
+  display: grid;
+  place-items: center;
+}
+.phase3 .tree-line .zone-row,
+.phase3 .tree-line .fixture-row {
+  flex: 1;
+  min-width: 0;
+}
+.phase3 .tree-line .zone-row {
+  padding-left: 6px;
+}
+.subcategory-tree {
+  margin-left: 18px;
+  border-left: 1px solid #d9e9e5;
+  padding-left: 5px;
+}
+.subcategory-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 9px 3px;
+  font-size: 11px;
+  color: #287b73;
+  text-align: left;
+}
+.phase3 .tree-fixture .fixture-row {
+  padding: 8px 4px;
+}
+.sku-tree-row {
+  display: block;
+  margin-left: 24px;
+  padding: 8px;
+  text-align: left;
+  width: calc(100% - 24px);
+  font-size: 10px;
+  border-radius: 5px;
+}
+.sku-tree-row small {
+  display: block;
+  font-size: 8px;
+  color: #768a96;
+}
+.sku-tree-row.selected {
+  background: #dbf4ee;
+  color: #00796e;
+}
+.sku-tree-row:hover {
+  background: #eff9f5;
+}
+.catalog-browser {
+  border-top: 1px solid #dbe9e6;
+  padding-top: 12px;
+  margin: 12px 0;
+  font-size: 11px;
+}
+.catalog-browser input,
+.catalog-browser select,
+.sku-selector input {
+  display: block;
+  width: 100%;
+  padding: 7px;
+  border: 1px solid #d8e5e2;
+  border-radius: 5px;
+  background: #fff;
+  margin: 4px 0 10px;
+}
+.catalog-filters {
+  display: flex;
+  gap: 8px;
+}
+.catalog-filters label {
+  flex: 1;
+  min-width: 0;
+}
+.subcategory-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 0;
+  list-style: none;
+}
+.subcategory-summary li {
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: #edf8f3;
+  color: #287b73;
+}
+.product-list {
+  max-height: 260px;
+  overflow: auto;
+}
+.product-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  border-bottom: 1px solid #e6ede9;
+  padding: 10px 4px;
+  text-align: left;
+  font-size: 11px;
+}
+.product-row:hover {
+  background: #f0f9f6;
+}
+.product-row small {
+  color: #728a93;
+}
+.product-row .oos {
+  color: #b92e43;
+}
+.product-row .available {
+  color: #007969;
+}
+.product-detail {
+  background: #f2faf7;
+  border: 1px solid #cee7dd;
+  padding: 12px;
+  margin: 12px 0;
+  border-radius: 8px;
+}
+.product-detail dl {
+  font-size: 11px;
+}
+.product-detail dd {
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+@media (max-width: 600px) {
+  .phase3 .navbar {
+    height: 96px;
+    min-height: 96px;
+    padding: 8px 12px;
+    gap: 5px 12px;
+    flex-wrap: wrap;
+    align-content: center;
+  }
+  .phase3 .navbar .brand {
+    flex: 1;
+    min-width: 0;
+  }
+  .phase3 .navbar .store-switch {
+    display: none;
+  }
+  .phase3 .navbar .nav-explorer-toggle {
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    color: #fff;
+    background: #007f79;
+    border: 1px solid #ffffff70;
+  }
+  .phase3 .navbar nav {
+    order: 3;
+    flex: 0 0 100%;
+    width: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .phase3 .navbar nav button,
+  .phase3 .navbar nav a {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+}
+.scene-html-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.phase3 .kpi-field-header .kpi-field-title {
+  flex-wrap: nowrap;
+}
+.phase3 .kpi-field-text {
+  min-width: 0;
+  white-space: normal;
+}

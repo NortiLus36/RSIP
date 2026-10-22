@@ -166,7 +166,6 @@ export function Timeline({ data }: { data: SpatialDataset }) {
             "Normal ไม่แสดง Heatmap · เปิด Customer Density เพื่อดูสีเปลี่ยนตามเวลา · "}
           หยุดที่ 22:00 · Occupancy แต่ละโซนเป็น snapshot พร้อมกัน
           ไม่ใช่จำนวนคนผ่านทั้งชั่วโมง · KPI แถบ Store Performance เป็นฐานรายวัน
-          Phase 3
         </p>
       </div>
     </section>

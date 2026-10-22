@@ -1,5 +1,5 @@
 "use client";
-import { KPIInfoPopover } from "@/components/analytics/KPIInfoPopover";
+import { KPIFieldHeader } from "@/components/analytics/KPIFieldHeader";
 import { useMemo } from "react";
 import {
   ResponsiveContainer,
@@ -40,7 +40,7 @@ export function HourChart({
   const peak = peakHour(data, date);
   const unit =
     metric === "sales"
-      ? "THB/ชั่วโมง"
+      ? "บาท/ชั่วโมง"
       : metric === "entries"
         ? "ผู้เข้าร้าน/ชั่วโมง"
         : "คน ณ snapshot";
@@ -49,14 +49,14 @@ export function HourChart({
   if (rows.every((r) => r[metric] === null))
     return (
       <p className="empty-state">
-        No Data · ไม่พบ {unit} ของ {zoneId ?? "ร้าน"} ในวันที่ {date}
+        ไม่มีข้อมูล · ไม่พบ {unit} ของ {zoneId ?? "ร้าน"} ในวันที่ {date}
       </p>
     );
   return (
     <div
       className="hour-chart"
       role="img"
-      aria-label={`${metric} ${date} ${zoneId ?? "Store"}`}
+      aria-label={`${metric === "sales" ? "ยอดขาย" : metric === "entries" ? "จำนวนลูกค้าเข้าร้าน" : "จำนวนลูกค้าในโซน"} ${date} ${zoneId ?? "ร้าน"}`}
     >
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
@@ -71,8 +71,27 @@ export function HourChart({
           }}
         >
           <CartesianGrid vertical={false} stroke="#edf1f4" />
-          <XAxis dataKey="name" tick={{ fontSize: 10 }} minTickGap={18} />
-          <YAxis width={52} tick={{ fontSize: 10 }} />
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 10 }}
+            minTickGap={18}
+            label={{
+              value: "เวลา",
+              position: "insideBottom",
+              offset: -5,
+              fontSize: 9,
+            }}
+          />
+          <YAxis
+            width={65}
+            tick={{ fontSize: 10 }}
+            label={{
+              value: metric === "sales" ? "บาท" : "คน",
+              angle: -90,
+              position: "insideLeft",
+              fontSize: 9,
+            }}
+          />
           <Tooltip
             labelFormatter={(label) => `${date} ${label} · Asia/Bangkok`}
             formatter={(value) => [
@@ -85,7 +104,7 @@ export function HourChart({
             stroke="#02aba4"
             strokeWidth={2}
             label={{
-              value: "Selected",
+              value: "ช่วงที่เลือก",
               fontSize: 10,
               position: "insideTopRight",
             }}
@@ -134,7 +153,7 @@ export function PeakAnalytics({
   const selected = rows.find((r) => r.hour === hour);
   const peak = peakHour(data, date);
   const top = topZones(data, date, hour).map((r) => ({
-    name: `${r.zoneId} · ${store.zones.find((z) => z.id === r.zoneId)?.name}`,
+    name: `${r.zoneId} · ${store.zones.find((z) => z.id === r.zoneId)?.nameTh}`,
     occupancy: r.occupancy,
   }));
   return (
@@ -152,37 +171,38 @@ export function PeakAnalytics({
           <small>สูงสุดจาก Dataset · เสมอกันเลือกชั่วโมงแรก</small>
         </article>
         <article>
-          <span>Selected hour traffic</span>
+          <span>ลูกค้าเข้าร้านช่วงที่เลือก</span>
           <b>{num(selected?.entries ?? null, "คน")}</b>
           <small>ผู้เข้าร้าน ไม่บวกจำนวนคนผ่านหลายโซน</small>
         </article>
         <article>
-          <span>Hourly sales</span>
-          <b>{num(selected?.sales ?? null, "THB")}</b>
+          <span>ยอดขายรายชั่วโมง</span>
+          <b>{num(selected?.sales ?? null, "บาท")}</b>
         </article>
         <article>
-          <span>Transactions</span>
+          <span>จำนวนธุรกรรม</span>
           <b>{num(selected?.transactions ?? null, "รายการ")}</b>
         </article>
       </div>
       <div className="peak-chart-grid">
         <article className="chart-card">
           <h3>
-            Hourly Customer Traffic
-            <KPIInfoPopover topic="trend" />
+            <KPIFieldHeader
+              label="จำนวนลูกค้าเข้าร้านรายชั่วโมง"
+              topic="trend"
+            />
           </h3>
           <p>
-            ผู้เข้าร้านต่อชั่วโมง · เส้นเหลือง = daily peak · เส้นเขียว =
-            selected
+            ผู้เข้าร้านต่อชั่วโมง · เส้นเหลือง = ช่วงสูงสุดของวัน · เส้นเขียว =
+            ช่วงที่เลือก
           </p>
           <HourChart data={data} date={date} selectedHour={hour} />
         </article>
         <article className="chart-card">
           <h3>
-            Sales by Hour
-            <KPIInfoPopover topic="trend" />
+            <KPIFieldHeader label="ยอดขายรายชั่วโมง" topic="trend" />
           </h3>
-          <p>THB ต่อชั่วโมง · รวมวันตรงกับข้อมูล Phase 3</p>
+          <p>บาทต่อชั่วโมง · รวมวันตรงกับฐานยอดขายรายวัน</p>
           <HourChart
             data={data}
             date={date}
@@ -192,8 +212,10 @@ export function PeakAnalytics({
         </article>
         <article className="chart-card">
           <h3>
-            Top 3 Busiest Zones
-            <KPIInfoPopover topic="category" />
+            <KPIFieldHeader
+              label="3 โซนที่มีลูกค้ามากที่สุด"
+              topic="category"
+            />
           </h3>
           <p>
             เรียงจาก Occupancy ณ {timeLabel(hour)} · ไม่ใช่ Footfall ทั้งวัน
@@ -205,7 +227,15 @@ export function PeakAnalytics({
                 layout="vertical"
                 margin={{ left: 16, right: 20 }}
               >
-                <XAxis type="number" />
+                <XAxis
+                  type="number"
+                  label={{
+                    value: "จำนวนคน",
+                    position: "insideBottom",
+                    offset: -3,
+                    fontSize: 9,
+                  }}
+                />
                 <YAxis
                   type="category"
                   dataKey="name"

@@ -44,7 +44,11 @@ export function AnalyticsWorkspace({ data }: { data: DashboardData }) {
         ) : module === "exploration" ? (
           <DataExploration dataset={data.dataset} store={data.store} />
         ) : module === "inventory" ? (
-          <InventoryPlanner dataset={data.dataset} items={data.inventory} />
+          <InventoryPlanner
+            dataset={data.dataset}
+            items={data.inventory}
+            catalog={data.catalog}
+          />
         ) : (
           <CalculatorForm
             key={module}

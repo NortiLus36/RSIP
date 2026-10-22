@@ -7,7 +7,7 @@ import {
   useEffect,
 } from "react";
 import { MeshStandardMaterial, type Group } from "three";
-import { Html } from "@react-three/drei";
+import { SceneHtml as Html } from "../SceneHtml";
 import { useExplorer } from "@/stores/explorer";
 import type { CharacterSpec } from "@/config/store-environment";
 import { PartBox, useAssets } from "../SceneAssets";

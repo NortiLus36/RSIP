@@ -21,7 +21,7 @@ export function Workspace({
   ...data
 }: DashboardData & { operationsPage?: boolean; initialTab?: string }) {
   const router = useRouter();
-  const [sidebar, setSidebar] = useState(true);
+  const [sidebar, setSidebar] = useState(!operationsPage);
   const [tab, setTab] = useState(initialTab);
   const [expanded, setExpanded] = useState(false);
   const [drawerCollapsed, setDrawerCollapsed] = useState(false);
@@ -55,15 +55,17 @@ export function Workspace({
               key={t}
               className={!operationsPage && tab === t ? "active" : ""}
               aria-pressed={!operationsPage && tab === t}
-              onClick={() =>
-                operationsPage
-                  ? router.push(
-                      t === "Explore"
-                        ? "/"
-                        : `/?view=${t === "Analytics" ? "analytics" : "peak"}`,
-                    )
-                  : setTab(t)
-              }
+              onClick={() => {
+                if (window.matchMedia("(max-width: 800px)").matches)
+                  setSidebar(false);
+                if (operationsPage) {
+                  router.push(
+                    t === "Explore"
+                      ? "/"
+                      : `/?view=${t === "Analytics" ? "analytics" : "peak"}`,
+                  );
+                } else setTab(t);
+              }}
             >
               {t}
             </button>
@@ -85,7 +87,7 @@ export function Workspace({
         </div>
       </header>
       <div className="body-layout">
-        {sidebar && <StoreExplorer store={data.store} />}
+        {sidebar && <StoreExplorer store={data.store} catalog={data.catalog} />}
         <section className="main-area">
           <div
             className={`scene-card ${selected ? (drawerCollapsed ? "drawer-is-collapsed" : "drawer-is-open") : ""}`}
@@ -116,7 +118,7 @@ export function Workspace({
                     </button>
                     <div>
                       <strong>{data.store.name}</strong>
-                      <small>SPATIAL ANALYTICS · PHASE 04</small>
+                      <small>ข้อมูลร้านและสินค้า</small>
                     </div>
                   </div>
                   <SceneToolbar />

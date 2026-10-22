@@ -24,6 +24,10 @@ const palette = [
   "#d3888b",
   "#758899",
   "#a0b870",
+  "#c09144",
+  "#466f9b",
+  "#af608c",
+  "#508b79",
 ];
 const currency = (value: unknown) =>
   Number.isFinite(Number(value))
@@ -32,7 +36,9 @@ const currency = (value: unknown) =>
       )
     : "N/A";
 function Empty() {
-  return <p className="empty-state">No Data · ไม่พบข้อมูลในขอบเขตที่เลือก</p>;
+  return (
+    <p className="empty-state">ไม่มีข้อมูล · ไม่พบข้อมูลในขอบเขตที่เลือก</p>
+  );
 }
 export function SalesTrendChart({
   data,
@@ -46,23 +52,41 @@ export function SalesTrendChart({
       className="analytics-chart"
       role="img"
       aria-label={
-        unit === "THB" ? "Sales trend history" : "Checkout wait history"
+        unit === "THB" ? "แนวโน้มยอดขายย้อนหลัง" : "เวลารอชำระเงินย้อนหลัง"
       }
     >
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
+        <LineChart data={data} margin={{ bottom: 16, left: 10, right: 12 }}>
           <CartesianGrid
             strokeDasharray="3 3"
             vertical={false}
             stroke="#edf0f5"
           />
-          <XAxis dataKey="name" tick={{ fontSize: 9 }} />
-          <YAxis tick={{ fontSize: 9 }} width={52} />
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 9 }}
+            label={{
+              value: "วันที่",
+              position: "insideBottom",
+              offset: -10,
+              fontSize: 9,
+            }}
+          />
+          <YAxis
+            tick={{ fontSize: 9 }}
+            width={62}
+            label={{
+              value: unit === "THB" ? "บาท" : "นาที",
+              angle: -90,
+              position: "insideLeft",
+              fontSize: 9,
+            }}
+          />
           <Tooltip formatter={currency} />
           <Line
             type="monotone"
             dataKey="sales"
-            name={unit === "THB" ? "ยอดขาย (THB)" : "เวลารอเฉลี่ย (นาที)"}
+            name={unit === "THB" ? "ยอดขาย (บาท)" : "เวลารอเฉลี่ย (นาที)"}
             stroke="#02aba4"
             strokeWidth={2}
             dot={false}
@@ -84,31 +108,48 @@ export function CategoryComparisonChart({
   return data.length ? (
     <div
       className="analytics-chart"
+      style={{ height: Math.max(220, data.length * 30) }}
       role="img"
       aria-label={
-        scenario ? "Scenario contribution comparison" : "Sales by category"
+        scenario
+          ? "เปรียบเทียบกำไรส่วนเพิ่มของทางเลือก"
+          : "ยอดขายแยกตามหมวดสินค้า"
       }
     >
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data}>
+        <BarChart
+          data={data}
+          layout="vertical"
+          margin={{ bottom: 16, right: 15, left: 8 }}
+        >
           <CartesianGrid
             strokeDasharray="3 3"
             vertical={false}
             stroke="#edf0f5"
           />
           <XAxis
+            type="number"
+            tick={{ fontSize: 9 }}
+            label={{
+              value: "บาท",
+              position: "insideBottom",
+              offset: -10,
+              fontSize: 9,
+            }}
+          />
+          <YAxis
+            type="category"
             dataKey="name"
             tick={{ fontSize: 9 }}
+            width={130}
             interval={0}
-            tickFormatter={(v) => String(v).split(" · ")[0]}
           />
-          <YAxis tick={{ fontSize: 9 }} width={52} />
           <Tooltip formatter={currency} />
           <Bar
             dataKey="sales"
-            name={scenario ? "Contribution (THB)" : "ยอดขาย (THB)"}
+            name={scenario ? "กำไรส่วนเพิ่ม (บาท)" : "ยอดขาย (บาท)"}
             fill="#02aba4"
-            radius={[4, 4, 0, 0]}
+            radius={[0, 4, 4, 0]}
           />
         </BarChart>
       </ResponsiveContainer>
@@ -119,10 +160,15 @@ export function CategoryComparisonChart({
 }
 export function CompositionChart({ data }: { data: ChartDatum[] }) {
   return data.length ? (
-    <div className="analytics-chart" role="img" aria-label="Sales composition">
+    <div
+      className="analytics-chart"
+      role="img"
+      aria-label="สัดส่วนยอดขายตามหมวดสินค้า"
+    >
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
+            name="ยอดขาย (บาท)"
             data={data}
             nameKey="name"
             dataKey="sales"
@@ -134,10 +180,7 @@ export function CompositionChart({ data }: { data: ChartDatum[] }) {
             ))}
           </Pie>
           <Tooltip formatter={currency} />
-          <Legend
-            wrapperStyle={{ fontSize: 9 }}
-            formatter={(v) => String(v).split(" · ")[0]}
-          />
+          <Legend wrapperStyle={{ fontSize: 9 }} formatter={(v) => String(v)} />
         </PieChart>
       </ResponsiveContainer>
     </div>

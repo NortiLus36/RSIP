@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import type { Store } from "@/types";
 import type { RetailDataset, AnalyticsFilter } from "@/types/analytics";
-import { KPIInfoPopover } from "./KPIInfoPopover";
+import { KPIFieldHeader } from "./KPIFieldHeader";
 import {
   currentRows,
   salesTotals,
@@ -27,10 +27,7 @@ export function KPIStatCard({
 }) {
   return (
     <article className="analytics-stat">
-      <span>
-        {label}
-        <KPIInfoPopover topic={label} />
-      </span>
+      <KPIFieldHeader label={label} />
       <strong>
         {value === null
           ? "N/A"
@@ -97,7 +94,7 @@ export function AnalyticsView({
                 <option value="">ทุก Zone</option>
                 {store.zones.map((z) => (
                   <option key={z.id} value={z.id}>
-                    {z.id} · {z.name}
+                    {z.id} · {z.nameTh}
                   </option>
                 ))}
               </select>
@@ -149,17 +146,17 @@ export function AnalyticsView({
       </p>
       <div className="analytics-stats">
         <KPIStatCard
-          label="Net Sales"
+          label="ยอดขายสุทธิ"
           value={rows.length ? totals.sales : null}
-          unit="THB"
+          unit="บาท"
         />
         <KPIStatCard
-          label="Gross Profit"
+          label="กำไรขั้นต้น"
           value={rows.length ? totals.grossProfit : null}
-          unit="THB"
+          unit="บาท"
         />
         <KPIStatCard
-          label="Gross Margin"
+          label="อัตรากำไรขั้นต้น"
           value={
             totals.sales ? (totals.grossProfit / totals.sales) * 100 : null
           }
@@ -168,8 +165,10 @@ export function AnalyticsView({
       </div>
       <div className="chart-card">
         <h3>
-          Sales Trend · ข้อมูลย้อนหลัง
-          <KPIInfoPopover topic="trend" />
+          <KPIFieldHeader
+            label="แนวโน้มยอดขาย · ข้อมูลย้อนหลัง"
+            topic="trend"
+          />
         </h3>
         <p>
           {weekly ? "สองช่วง ช่วงละ 7 วัน" : "รายวันย้อนหลัง 14 วัน"} ·
@@ -180,15 +179,16 @@ export function AnalyticsView({
       <div className="chart-columns">
         <div className="chart-card">
           <h3>
-            Sales by Category
-            <KPIInfoPopover topic="category" />
+            <KPIFieldHeader label="ยอดขายแยกตามหมวดสินค้า" topic="category" />
           </h3>
           <CategoryComparisonChart data={compared} />
         </div>
         <div className="chart-card">
           <h3>
-            Sales Composition
-            <KPIInfoPopover topic="composition" />
+            <KPIFieldHeader
+              label="สัดส่วนยอดขายตามหมวดสินค้า"
+              topic="composition"
+            />
           </h3>
           <CompositionChart data={compared} />
         </div>

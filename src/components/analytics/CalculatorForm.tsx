@@ -10,7 +10,7 @@ import {
 import { validateDraft } from "@/lib/analytics/validation";
 import { CategoryComparisonChart } from "./Charts";
 import { contributionInsight } from "@/lib/analytics/insights";
-import { KPIInfoPopover } from "./KPIInfoPopover";
+import { KPIFieldHeader } from "./KPIFieldHeader";
 const format = (n: number | null) =>
   n === null
     ? "N/A"
@@ -19,10 +19,12 @@ export function CalculatorForm({
   kind,
   defaults,
   period,
+  productUnit,
 }: {
   kind: CalculatorKind;
   defaults: Record<string, number>;
   period?: string;
+  productUnit?: string;
 }) {
   const id = useId();
   const initial = () =>
@@ -79,11 +81,10 @@ export function CalculatorForm({
       <div className="calculator-inputs">
         {calculatorFields[kind].map((f) => (
           <label key={f.key} htmlFor={`${id}-${f.key}`}>
-            <span>
-              {f.label}
-              <KPIInfoPopover topic={f.label} />
-              <small>{f.unit}</small>
-            </span>
+            <KPIFieldHeader
+              label={f.label}
+              unit={productUnit ? f.unit.replace("ชิ้น", productUnit) : f.unit}
+            />
             <input
               id={`${id}-${f.key}`}
               type="text"
@@ -117,12 +118,12 @@ export function CalculatorForm({
         {results.map((r) => (
           <article key={r.label}>
             <div>
-              <span>
-                {r.label}
-                <KPIInfoPopover topic={r.label} />
-              </span>
+              <KPIFieldHeader label={r.label} />
               <strong data-result={r.label}>
-                {format(r.value)} <small>{r.unit}</small>
+                {format(r.value)}{" "}
+                <small>
+                  {productUnit ? r.unit.replace("ชิ้น", productUnit) : r.unit}
+                </small>
               </strong>
             </div>
             <code>{r.formula}</code>
@@ -135,7 +136,12 @@ export function CalculatorForm({
         <>
           <CategoryComparisonChart
             scenario
-            data={results.map((r) => ({ name: r.label, sales: r.value ?? 0 }))}
+            data={results.map((r) => ({
+              name: r.label
+                .replace("Contribution A", "ทางเลือก A")
+                .replace("Contribution B", "ทางเลือก B"),
+              sales: r.value ?? 0,
+            }))}
           />
           <p className="business-insight">
             {contributionInsight(results[0].value!, results[1].value!)}

@@ -1,4 +1,4 @@
-import { floorPlan, categories } from "@/config/floor-plan";
+import { floorPlan } from "@/config/floor-plan";
 import { spatialDataset } from "@/data/mock/spatial";
 import type { SpatialDataset } from "@/types/spatial";
 import {
@@ -8,6 +8,9 @@ import {
   analyticsDataset,
 } from "@/data/mock";
 import type { RetailDataset } from "@/types/analytics";
+import type { ProductCatalog } from "@/types/catalog";
+import { productCatalog } from "@/data/mock/catalog";
+import { validateCatalog } from "@/lib/analytics/catalog";
 import type {
   Store,
   KpiSnapshot,
@@ -23,18 +26,24 @@ export interface RetailDataProvider {
   getCategories(): Promise<ProductCategory[]>;
   getAnalytics(): Promise<RetailDataset>;
   getSpatial(): Promise<SpatialDataset>;
+  getCatalog(): Promise<ProductCatalog>;
 }
 export const retailProvider: RetailDataProvider = {
   getStore: async () => floorPlan,
   getSnapshot: async (id) => snapshots.find((s) => s.objectId === id),
   getTraffic: async () => hourlyTraffic,
   getInventory: async () => inventory,
-  getCategories: async () => categories,
+  getCategories: async () => productCatalog.categories,
   getAnalytics: async () => analyticsDataset,
   getSpatial: async () => spatialDataset,
+  getCatalog: async () => {
+    const errors = validateCatalog(productCatalog, floorPlan);
+    if (errors.length) throw new Error(`Invalid catalog: ${errors.join(", ")}`);
+    return productCatalog;
+  },
 };
 export async function loadDashboard() {
-  const [store, traffic, categories, inventory, dataset, spatial] =
+  const [store, traffic, categories, inventory, dataset, spatial, catalog] =
     await Promise.all([
       retailProvider.getStore(),
       retailProvider.getTraffic(),
@@ -42,6 +51,7 @@ export async function loadDashboard() {
       retailProvider.getInventory(),
       retailProvider.getAnalytics(),
       retailProvider.getSpatial(),
+      retailProvider.getCatalog(),
     ]);
   const snapshot = await retailProvider.getSnapshot(store.id);
   if (!snapshot) throw new Error("Store KPI snapshot is missing");
@@ -62,6 +72,7 @@ export async function loadDashboard() {
     inventory,
     dataset,
     spatial,
+    catalog,
   };
 }
 export type DashboardData = Awaited<ReturnType<typeof loadDashboard>>;

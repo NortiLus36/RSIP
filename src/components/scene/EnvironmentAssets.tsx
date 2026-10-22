@@ -1,5 +1,6 @@
 "use client";
-import { Html, Line } from "@react-three/drei";
+import { Line } from "@react-three/drei";
+import { SceneHtml as Html } from "./SceneHtml";
 import { useMemo, useEffect } from "react";
 import { MeshStandardMaterial } from "three";
 import type { Store, Vec3 } from "@/types";

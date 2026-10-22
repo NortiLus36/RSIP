@@ -1,5 +1,6 @@
 import { floorPlan } from "@/config/floor-plan";
 import { inventory } from "./inventory";
+import { productCatalog, categoryCostRatios } from "./catalog";
 import { hourlyTraffic } from "./traffic";
 import type { RetailDataset, SalesRecord } from "@/types/analytics";
 const weights: Record<string, number> = {
@@ -15,20 +16,6 @@ const weights: Record<string, number> = {
   K: 6,
   M: 10,
   N: 3,
-};
-const costRatios: Record<string, number> = {
-  A: 0.78,
-  B: 0.72,
-  C: 0.79,
-  D: 0.77,
-  E: 0.8,
-  G: 0.72,
-  H: 0.63,
-  I: 0.74,
-  J: 0.75,
-  K: 0.6,
-  M: 0.58,
-  N: 0.82,
 };
 const dates = Array.from(
   { length: 14 },
@@ -56,16 +43,24 @@ dates.forEach((date, day) => {
           ? zoneTotal - used
           : Math.floor(zoneTotal / fixtures.length);
       used += value;
-      const item = inventory.find((item) => item.shelfId === f.id)!;
-      sales.push({
-        date,
-        sku: item.sku,
-        fixtureId: f.id,
-        zoneId,
-        categoryId: item.categoryId,
-        netSalesCents: value,
-        cogsCents: Math.round(value * costRatios[zoneId]),
-        wasteCents: Math.round(value * 0.011),
+      const items = inventory.filter((item) => item.shelfId === f.id);
+      let skuUsed = 0;
+      items.forEach((item, ii) => {
+        const skuValue =
+          ii === items.length - 1
+            ? value - skuUsed
+            : Math.floor(value / items.length);
+        skuUsed += skuValue;
+        sales.push({
+          date,
+          sku: item.sku,
+          fixtureId: f.id,
+          zoneId,
+          categoryId: item.categoryId,
+          netSalesCents: skuValue,
+          cogsCents: Math.round(skuValue * categoryCostRatios[zoneId]),
+          wasteCents: Math.round(skuValue * 0.011),
+        });
       });
     });
   });
@@ -106,12 +101,14 @@ export const analyticsDataset: RetailDataset = {
         };
       }),
   ),
-  planning: inventory.map((item, i) => ({
+  planning: productCatalog.planning.map((item) => ({
     sku: item.sku,
-    dailyDemand: 8 + (i % 12),
-    leadTime: 3 + (i % 3),
-    safetyStock: 15 + (i % 5),
-    incomingStock: 20,
+    dailyDemand: item.averageDailyDemand,
+    leadTime: item.leadTimeDays,
+    safetyStock: item.safetyStock,
+    incomingStock: productCatalog.stockLocations
+      .filter((r) => r.sku === item.sku)
+      .reduce((s, r) => s + r.incomingStock, 0),
     arrivalDays: 2,
   })),
   scenarioDefaults: {
