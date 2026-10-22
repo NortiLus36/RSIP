@@ -47,6 +47,79 @@ test("thresholds have explicit boundary and missing behavior", () => {
   for (const value of [null, NaN, Infinity, -1])
     assert.equal(colorLevel(value, "oos").label, "No Data");
 });
+test("density colors change inside a threshold band without changing its classification", () => {
+  const low = colorLevel(0.02, "density"),
+    higher = colorLevel(0.1, "density");
+  assert.equal(low.level, higher.level);
+  assert.notEqual(low.color, higher.color);
+  assert.equal(colorLevel(0, "density").color, "#22b8a8");
+  assert.equal(colorLevel(0.15, "density").color, "#facc15");
+  assert.equal(colorLevel(0.4, "density").color, "#ef6548");
+  assert.equal(colorLevel(2, "density").color, "#ef6548");
+});
+test("08:00, 12:00 and 19:00 resolve distinct real density colors and hourly KPIs", () => {
+  const hours = [8, 12, 19];
+  const values = hours.map((hour) =>
+    layerValue(data, "2026-10-22", hour, "C", "density"),
+  );
+  assert.equal(
+    new Set(values.map((value) => colorLevel(value, "density").color)).size,
+    3,
+  );
+  const rows = hourlySeries(data, "2026-10-22").filter((r) =>
+    hours.includes(r.hour),
+  );
+  assert.equal(new Set(rows.map((r) => r.entries)).size, 3);
+  assert.equal(new Set(rows.map((r) => r.sales)).size, 3);
+});
+test("peak detects a noon maximum rather than assuming an evening hour", () => {
+  assert.equal(
+    peakHour(
+      {
+        ...data,
+        storeHours: [
+          { date: "noon", hour: 8, entries: 10 },
+          { date: "noon", hour: 12, entries: 100 },
+          { date: "noon", hour: 19, entries: 70 },
+        ],
+      },
+      "noon",
+    ),
+    12,
+  );
+});
+test("peak detects an evening maximum regardless of input ordering", () => {
+  assert.equal(
+    peakHour(
+      {
+        ...data,
+        storeHours: [
+          { date: "evening", hour: 19, entries: 150 },
+          { date: "evening", hour: 12, entries: 100 },
+          { date: "evening", hour: 8, entries: 10 },
+        ],
+      },
+      "evening",
+    ),
+    19,
+  );
+});
+test("tied peak maxima choose the earliest hour regardless of ordering", () => {
+  assert.equal(
+    peakHour(
+      {
+        ...data,
+        storeHours: [
+          { date: "tie", hour: 19, entries: 150 },
+          { date: "tie", hour: 12, entries: 150 },
+          { date: "tie", hour: 8, entries: 10 },
+        ],
+      },
+      "tie",
+    ),
+    12,
+  );
+});
 test("three distinct complete days use all floor-plan zone and fixture identities", () => {
   assert.equal(data.dates.length, 3);
   assert.deepEqual(

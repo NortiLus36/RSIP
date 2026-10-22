@@ -31,11 +31,32 @@ export function colorLevel(
   const config = layerConfig[layer];
   const level =
     value < config.thresholds[0] ? 0 : value < config.thresholds[1] ? 1 : 2;
+  // Density is continuous: changes inside a band must remain visible too.
+  const color =
+    layer === "density" ? densityColor(value) : config.colors[level];
   return {
-    color: config.colors[level],
+    color,
     label: ["Low / Normal", "Medium / Watch", "High"][level],
     level,
   };
+}
+function densityColor(value: number) {
+  const { colors, thresholds } = layerConfig.density;
+  const segment = value < thresholds[0] ? 0 : 1;
+  const from = segment === 0 ? 0 : thresholds[0];
+  const to = thresholds[segment];
+  const t = Math.max(0, Math.min(1, (value - from) / (to - from)));
+  const channels = (hex: string) =>
+    [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const a = channels(colors[segment]),
+    b = channels(colors[segment + 1]);
+  return `#${a
+    .map((v, i) =>
+      Math.round(v + (b[i] - v) * t)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
 }
 export function validTime(data: SpatialDataset, date: string, hour: number) {
   return data.dates.includes(date) && data.hours.includes(hour);

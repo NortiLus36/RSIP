@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, type CSSProperties } from "react";
 import { Play, Pause, RotateCcw } from "lucide-react";
 import type { SpatialDataset } from "@/types/spatial";
 import { useSpatial } from "@/stores/spatial";
@@ -25,6 +25,7 @@ export function Timeline({ data }: { data: SpatialDataset }) {
     setTime,
     setPlaying,
     setSpeed,
+    activeDataLayer,
   } = useSpatial();
   useEffect(() => {
     if (!playing) return;
@@ -110,6 +111,12 @@ export function Timeline({ data }: { data: SpatialDataset }) {
           max={data.hours.at(-1)}
           step={1}
           value={hour}
+          aria-valuetext={`${date} ${timeLabel(hour)} Asia/Bangkok`}
+          style={
+            {
+              "--timeline-progress": `${((hour - data.hours[0]) / (data.hours.at(-1)! - data.hours[0])) * 100}%`,
+            } as CSSProperties
+          }
           onChange={(e) => change(date, Number(e.target.value))}
         />
         <span>22:00</span>
@@ -135,6 +142,8 @@ export function Timeline({ data }: { data: SpatialDataset }) {
         </span>
       </div>
       <p className="timeline-note">
+        {activeDataLayer === "normal" &&
+          "Normal ไม่แสดง Heatmap · เปิด Customer Density เพื่อดูสีเปลี่ยนตามเวลา · "}
         หยุดที่ 22:00 · Occupancy แต่ละโซนเป็น snapshot พร้อมกัน
         ไม่ใช่จำนวนคนผ่านทั้งชั่วโมง · KPI แถบ Store Performance เป็นฐานรายวัน
         Phase 3

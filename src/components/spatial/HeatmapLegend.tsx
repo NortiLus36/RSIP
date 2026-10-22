@@ -33,7 +33,15 @@ export function HeatmapLegend({
         .filter((v): v is number => v !== null),
     [data, date, hour, layer, store.zones],
   );
-  if (layer === "normal") return null;
+  if (layer === "normal")
+    return (
+      <aside className="heatmap-off" aria-label="Heatmap is off">
+        <span>Normal · Heatmap ปิดอยู่</span>
+        <button onClick={() => useSpatial.getState().setLayer("density")}>
+          เปิด Customer Density
+        </button>
+      </aside>
+    );
   const config = layerConfig[layer];
   const value = zone ? layerValue(data, date, hour, zone.id, layer) : null;
   return (
@@ -52,6 +60,17 @@ export function HeatmapLegend({
             {date} · {timeLabel(hour)} · DEMO
           </p>
           <small>{config.unit}</small>
+          {layer === "density" && (
+            <>
+              <div
+                className="density-scale"
+                style={{
+                  background: `linear-gradient(90deg, ${config.colors[0]} 0%, ${config.colors[1]} ${(config.thresholds[0] / config.thresholds[1]) * 100}%, ${config.colors[2]} 100%)`,
+                }}
+              />
+              <small>สีไล่ระดับตามค่าจริง · ระดับด้านล่างใช้จัดกลุ่ม</small>
+            </>
+          )}
           {config.colors.map((color, i) => (
             <div className="legend-row" key={color}>
               <i style={{ background: color }} />

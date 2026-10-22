@@ -80,7 +80,7 @@ npm test
 npm run build
 ```
 
-36 tests cover formulas, invalid inputs, source reconciliation, peak derivation, density/OOS thresholds, missing data, date/hour validation, playback endpoint/cleanup, independent scene state and floor/camera contracts. See [Phase 4 report](docs/PHASE4.md) for architecture, browser evidence and limitations. Historical [Phase 3](docs/PHASE3.md), [Phase 2](docs/PHASE2.md) and [Phase 1](docs/PHASE1.md) reports remain available.
+41 tests cover formulas, invalid inputs, source reconciliation, noon/evening/tied peaks, density color changes within threshold bands, missing data, date/hour validation, playback endpoint/cleanup, independent scene state and floor/camera contracts. See [Phase 4 fix verification](docs/PHASE4-FIX.md) for root causes, calculator menu paths and browser evidence, and [Phase 4 report](docs/PHASE4.md) for the original architecture. Historical [Phase 3](docs/PHASE3.md), [Phase 2](docs/PHASE2.md) and [Phase 1](docs/PHASE1.md) reports remain available.
 
 ## Analytics definitions
 

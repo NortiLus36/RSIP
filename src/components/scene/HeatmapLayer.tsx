@@ -26,7 +26,7 @@ function ZoneOverlay({ zone, color }: { zone: Zone; color: string }) {
       <meshBasicMaterial
         color={color}
         transparent
-        opacity={0.66}
+        opacity={0.84}
         depthWrite={false}
         polygonOffset
         polygonOffsetFactor={-1}
