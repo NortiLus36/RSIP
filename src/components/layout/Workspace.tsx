@@ -10,6 +10,9 @@ import { SceneHost } from "@/components/scene/SceneHost";
 import { SceneToolbar } from "@/components/scene/SceneToolbar";
 import { BottomDashboard } from "@/components/dashboard/BottomDashboard";
 import { AnalyticsWorkspace } from "@/components/analytics/AnalyticsWorkspace";
+import { Timeline } from "@/components/spatial/Timeline";
+import { HeatmapLegend } from "@/components/spatial/HeatmapLegend";
+import { PeakAnalytics } from "@/components/spatial/PeakAnalytics";
 export function Workspace(data: DashboardData) {
   const [sidebar, setSidebar] = useState(true);
   const [tab, setTab] = useState("Explore");
@@ -40,7 +43,7 @@ export function Workspace(data: DashboardData) {
           {data.store.name}
         </div>
         <nav aria-label="Main navigation">
-          {["Explore", "Analytics", "Operations"].map((t) => (
+          {["Explore", "Peak Time", "Analytics", "Operations"].map((t) => (
             <button
               key={t}
               className={tab === t ? "active" : ""}
@@ -50,9 +53,6 @@ export function Workspace(data: DashboardData) {
               {t}
             </button>
           ))}
-          <button disabled title="Future phase">
-            Simulation <span>SOON</span>
-          </button>
         </nav>
         <div className="nav-end">
           <span className="demo-badge">
@@ -69,7 +69,7 @@ export function Workspace(data: DashboardData) {
             className={`scene-card ${selected ? (drawerCollapsed ? "drawer-is-collapsed" : "drawer-is-open") : ""}`}
           >
             <div className="scene-viewport">
-              <SceneHost store={data.store} />
+              <SceneHost store={data.store} spatial={data.spatial} />
               <div className="workspace-overlay">
                 <button
                   className="square-button"
@@ -84,10 +84,11 @@ export function Workspace(data: DashboardData) {
                 </button>
                 <div>
                   <strong>{data.store.name}</strong>
-                  <small>INTERACTIVE STORE · PHASE 03</small>
+                  <small>SPATIAL ANALYTICS · PHASE 04</small>
                 </div>
               </div>
               <SceneToolbar />
+              <HeatmapLegend store={data.store} data={data.spatial} />
               <div className="scene-bottom">
                 <span>
                   <i /> {data.store.zones.length} ZONES ·{" "}
@@ -110,14 +111,19 @@ export function Workspace(data: DashboardData) {
                 >
                   ← Explore
                 </button>
-                <AnalyticsWorkspace
-                  key={tab}
-                  data={data}
-                  operations={tab === "Operations"}
-                />
+                {tab === "Peak Time" ? (
+                  <PeakAnalytics data={data.spatial} store={data.store} />
+                ) : (
+                  <AnalyticsWorkspace
+                    key={tab}
+                    data={data}
+                    operations={tab === "Operations"}
+                  />
+                )}
               </div>
             )}
           </div>
+          <Timeline data={data.spatial} />
           <BottomDashboard
             snapshot={data.snapshot}
             expanded={expanded}

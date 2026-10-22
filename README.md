@@ -1,6 +1,6 @@
 # RetailVerse 3D — Smart Store Digital Twin
 
-RSIP (Retail Store Intelligence Platform), Phase 3 interactive retail analytics workspace. All figures, inventory and customer traffic are **synthetic mock data**. This is not a real Lotus's system and uses no Lotus's operational data. Floor-plan coordinates approximate the user-supplied image; they are neither an exact tracing nor a measured building survey.
+RSIP (Retail Store Intelligence Platform), Phase 4 spatial retail analytics workspace. All figures, inventory and customer traffic are **synthetic mock data**. This is not a real Lotus's system and uses no Lotus's operational data. Floor-plan coordinates approximate the user-supplied image; they are neither an exact tracing nor a measured building survey.
 
 ## Run locally
 
@@ -21,9 +21,16 @@ npm start
 
 WebGL is required for the scene; the explorer and dashboard remain available through the scene fallback. No API keys, environment files, backend or database are required. If a restricted Windows sandbox blocks the compiler's local worker sockets, run these commands from a normal project terminal.
 
+Development and production builds use Next.js's supported webpack option after a Turbopack worker failure on this Windows setup. `next/font/google` downloads Kanit at build time; the browser then loads the bundled font locally. The first build needs access to official Google Fonts.
+
 ## Features and layout
 
-![Phase 3 fullscreen workspace](docs/phase3-workspace.jpg)
+![Phase 4 density heatmap](docs/phase4-density.jpg)
+
+- Brand tokens use `#02ABA4`, `#FFC815` and white; Kanit weights 300–700 cover Thai and English. Semantic heatmap/error colors and individual product colors remain separate.
+- Data layer selector: Normal / Customer Density / Sales Intensity / OOS Risk. Transparent zone polygon overlays derive from existing floor-plan transforms, preserve picking and selection, and have a collapsible legend with thresholds, units, time and No Data.
+- Three distinct hourly demo days (20–22 October 2026), 08:00–22:00 buckets. Timeline date/hour, Play/Pause/Reset, 1×/2×/5× speed and derived peak indicators update the heatmap, hourly store KPIs, Inspector and charts together. Playback stops at the final bucket.
+- Peak Time dashboard: hourly entries and sales Line charts, clickable hour selection, selected markers, Top 3 occupancy Bar chart and selected-hour KPIs. Inspector adds hourly Overview context and a Traffic tab without resetting calculators or camera.
 
 - Thai-first fullscreen `100dvh` workspace with fixed navbar, internal explorer scroll, full remaining-space canvas, collapsible right drawer with Overview / Inventory / Analytics tabs and collapsible seven-KPI store strip. The document does not scroll. Mobile uses a bottom drawer with separate space for the model.
 - Thirteen zones A–M with 51 detailed, selectable fixtures: multi-tier product shelves, produce bins, glass refrigerators, warehouse racks/pallets/trolley, bakery counters, eight checkout/POS stations and apparel racks with hanging clothes, folded clothing and shoes. The Phase 1 zone coordinates are unchanged.
@@ -47,16 +54,17 @@ src/
       fixtures/          Reusable, memoized fixture model families
     panels/              StoreExplorer and ObjectInspector
     dashboard/           Collapsible store KPI strip
+    spatial/             Timeline, legend, hourly charts and Inspector context
   config/                Editable floor plan and camera defaults
   data/mock/             Canonical sales facts, inventory, planning and service records
   data/providers/        RetailDataProvider and page data loader
-  stores/                Zustand explorer and toolbar state
+  stores/                Independent Zustand explorer and spatial/time state
   lib/analytics/         Pure calculators, validation, selectors, aggregation and insights
   lib/scene/             Object lookup and camera framing math
   lib/simulation/        Simulation parameters and engine contract
   types/                 Shared domain models
 tests/                   Data integrity and provider checks
-docs/                    Phase 1/2/3 delivery reports and screenshots
+docs/                    Phase 1–4 delivery reports and screenshots
 ```
 
 ## Dependencies (installed versions)
@@ -72,13 +80,15 @@ npm test
 npm run build
 ```
 
-24 tests cover all main formulas, zero/invalid/boundary/overflow cases, NPS total validation, inventory arrival timing, chart/pivot/KPI reconciliation, critical action separation, unchanged object relationships and the Phase 2 floor/camera contracts. See [Phase 3 report](docs/PHASE3.md) for the baseline, changed data definitions and browser evidence. Earlier [Phase 2](docs/PHASE2.md) and [Phase 1](docs/PHASE1.md) reports remain available.
+36 tests cover formulas, invalid inputs, source reconciliation, peak derivation, density/OOS thresholds, missing data, date/hour validation, playback endpoint/cleanup, independent scene state and floor/camera contracts. See [Phase 4 report](docs/PHASE4.md) for architecture, browser evidence and limitations. Historical [Phase 3](docs/PHASE3.md), [Phase 2](docs/PHASE2.md) and [Phase 1](docs/PHASE1.md) reports remain available.
 
 ## Analytics definitions
 
 The canonical provider supplies 14 days (9–22 October 2026) of synthetic sales in integer cents, current inventory, planning assumptions, store context and checkout wait records. Cards and charts derive from those records. Current daily store sales are ฿284,650; gross profit and OOS have been recalculated rather than retaining Phase 2 placeholders. All displayed money uses up to two decimal places.
 
 Daily means the latest demo day. Weekly means the last seven demo days, not a calendar week. Historical trend charts label their separate history window explicitly. OOS means shelf `onHand = 0` / checked merchandise SKU count at the current stock snapshot; backroom availability does not remove a shelf stockout. CSAT uses satisfied / responses. NPS is a signed score. Checkout wait is weighted by transactions.
+
+Phase 4 allocates the same daily sales cents, entry totals and transactions across hourly buckets; totals reconcile exactly. The synthetic daily reporting window now ends at 23:00 rather than Phase 3's 18:00 label, with daily values unchanged. Occupancy is an exclusive-zone customer snapshot at the start of each hour, not hourly footfall. Store traffic counts entrants directly and is never calculated by summing zone visits. Density divides occupancy by explicitly **mock square metres**, not measured scene units. Backroom occupancy and warehouse/checkout sales or stock checks can be No Data. OOS at 22 October 18:00 matches the inventory snapshot; other hours are synthetic risk snapshots. Last bucket 22:00 represents 22:00–23:00. Daily cards remain the fixed Phase 3 baseline, while the separate hourly KPI strip follows the timeline.
 
 Calculators are local scenarios. Division by zero yields `N/A`; invalid/empty/negative/non-finite values show validation, including response-count and percentage bounds. Very large values outside JavaScript's safe-number range and unsafe results are rejected. Incoming stock counts only if its arrival falls within the entered lead-time window. The simple planning formula does not incorporate reorder cycle, MOQ, supplier uncertainty or demand variability and never creates an actual order.
 
@@ -94,8 +104,8 @@ To use ASP.NET Core (.NET 10), implement `RetailDataProvider` with HTTP calls an
 
 Floor plan/models remain approximate and stylized. There are 40 representative mock SKUs, including two warehouse-only SKUs, rather than a complete retail catalog. Inspector content intentionally scrolls; outer Explore does not. Global analytics filters are independent of scene selection; Inspector analytics always use the selected object.
 
-Scenario drafts are local: Inspector Inventory retains drafts across its tabs, but switching object/SKU resets its demo. Global module drafts and action edits reset when leaving their screen; there is no persistence, actual ordering or task assignment. Advanced chart animation, exports and custom chart configuration remain deferred. No backend, real inventory feeds, advanced statistical forecast, customer/queue/traffic simulation, heatmaps, AI recommendations, English locale switch or dark theme were added. No new dependencies were required.
+Scenario drafts are local: Inspector Inventory retains drafts across its tabs and timeline changes, but switching object/SKU resets its demo. Global module drafts and action edits reset when leaving their screen; there is no persistence, actual ordering or task assignment. Advanced chart animation, exports and custom chart configuration remain deferred. Heatmaps use 13 zone meshes, not spatial interpolation or customer tracking. No backend, real inventory feeds, advanced statistical forecast, animated customer movement, AI recommendations, English locale switch or dark theme were added. No new dependencies were required.
 
 `npm audit` on 21 October 2026 reports five high advisories in the **development-only ESLint chain**, rooted in `braces` through micromatch/fast-glob. npm suggests downgrading eslint-config-next to 14.x, which conflicts with this Next 16 foundation; no forced downgrade was applied. Production dependency audit is recorded separately in the delivery report. Review upstream patches before deploying a development service that accepts untrusted glob patterns.
 
-Phase 3 stops here. Phase 4 must be explicitly requested; heatmaps and peak-time simulation have not been started.
+Phase 4 stops here. Final deployment and Phase 5 require a separate instruction.

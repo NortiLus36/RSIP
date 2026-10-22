@@ -59,7 +59,7 @@ export const FixtureRenderer = memo(function FixtureRenderer({
             <mesh position={[0, h / 2, 0]} raycast={() => null}>
               <boxGeometry args={[w + 0.08, h + 0.08, d + 0.08]} />
               <meshBasicMaterial
-                color={selected ? "#3459ce" : "#69abc7"}
+                color={selected ? "#02aba4" : "#ffc815"}
                 wireframe
                 transparent
                 opacity={0.75}

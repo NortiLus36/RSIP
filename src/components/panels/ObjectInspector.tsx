@@ -15,6 +15,7 @@ import { filterForObject } from "@/lib/analytics/selectors";
 import { InventoryPlanner } from "@/components/analytics/InventoryPlanner";
 import { AnalyticsView } from "@/components/analytics/AnalyticsView";
 import { SalesTrendChart } from "@/components/analytics/Charts";
+import { SpatialInspector } from "@/components/spatial/SpatialInspector";
 export function ObjectInspector({
   data,
   collapsed,
@@ -136,7 +137,7 @@ function InspectorBody({
           role="tablist"
           aria-label="Inspector tabs"
         >
-          {["Overview", "Inventory", "Analytics"].map((t) => (
+          {["Overview", "Inventory", "Analytics", "Traffic"].map((t) => (
             <button
               key={t}
               role="tab"
@@ -156,6 +157,12 @@ function InspectorBody({
             aria-labelledby="inspector-tab-Overview"
             hidden={tab !== "Overview"}
           >
+            <SpatialInspector
+              data={data.spatial}
+              zoneId={parent?.id}
+              fixtureId={fixture?.id}
+            />
+            <h3>Daily KPI · ฐานข้อมูลรายวัน</h3>
             <p className="data-period">
               {snapshot
                 ? formatPeriod(snapshot.period)
@@ -232,6 +239,21 @@ function InspectorBody({
               ยอดขาย/กำไรของ Zone รวมจาก SKU ของ Fixture ภายใน Zone; OOS ใช้
               stock snapshot ไม่เฉลี่ยเปอร์เซ็นต์จากชั้นวาง
             </p>
+          </section>
+          <section
+            role="tabpanel"
+            id="inspector-panel-Traffic"
+            aria-labelledby="inspector-tab-Traffic"
+            hidden={tab !== "Traffic"}
+          >
+            {tab === "Traffic" && !collapsed && (
+              <SpatialInspector
+                data={data.spatial}
+                zoneId={parent?.id}
+                fixtureId={fixture?.id}
+                chart
+              />
+            )}
           </section>
           <section
             role="tabpanel"

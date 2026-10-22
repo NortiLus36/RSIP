@@ -8,8 +8,12 @@ import {
   BrickWall,
 } from "lucide-react";
 import { useExplorer } from "@/stores/explorer";
+import { useSpatial } from "@/stores/spatial";
+import type { DataLayer } from "@/types/spatial";
 export function SceneToolbar() {
   const s = useExplorer();
+  const layer = useSpatial((s) => s.activeDataLayer);
+  const setLayer = useSpatial((s) => s.setLayer);
   return (
     <div className="scene-toolbar" role="toolbar" aria-label="Scene controls">
       <button onClick={s.reset} title="Reset camera" aria-label="Reset camera">
@@ -36,13 +40,19 @@ export function SceneToolbar() {
         </button>
       ))}
       <i />
-      <button
-        disabled
-        title="Layers · Coming soon"
-        aria-label="Layers coming soon"
-      >
-        <Layers size={17} />
-      </button>
+      <label className="layer-controller">
+        <Layers size={16} />
+        <select
+          aria-label="Data layer"
+          value={layer}
+          onChange={(e) => setLayer(e.target.value as DataLayer)}
+        >
+          <option value="normal">Normal</option>
+          <option value="density">Customer Density</option>
+          <option value="sales">Sales Intensity</option>
+          <option value="oos">OOS Risk</option>
+        </select>
+      </label>
     </div>
   );
 }

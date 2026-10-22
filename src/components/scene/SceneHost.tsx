@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 import { Component, type ReactNode } from "react";
 import type { Store } from "@/types";
+import type { SpatialDataset } from "@/types/spatial";
 const StoreScene = dynamic(() => import("./StoreScene"), {
   ssr: false,
   loading: () => (
@@ -36,11 +37,17 @@ class SceneBoundary extends Component<
     );
   }
 }
-export function SceneHost({ store }: { store: Store }) {
+export function SceneHost({
+  store,
+  spatial,
+}: {
+  store: Store;
+  spatial: SpatialDataset;
+}) {
   return (
     <div className="canvas-container">
       <SceneBoundary>
-        <StoreScene store={store} />
+        <StoreScene store={store} spatial={spatial} />
       </SceneBoundary>
     </div>
   );

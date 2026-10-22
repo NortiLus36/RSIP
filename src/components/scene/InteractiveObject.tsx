@@ -52,7 +52,7 @@ export function SelectionHighlight({
         args={[transform.size[0] + 0.22, transform.size[2] + 0.22]}
       />
       <meshBasicMaterial
-        color={selected ? "#4263dc" : "#80bdd6"}
+        color={selected ? "#02aba4" : "#ffc815"}
         transparent
         opacity={selected ? 0.26 : 0.18}
         depthWrite={false}

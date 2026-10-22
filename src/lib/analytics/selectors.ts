@@ -180,7 +180,7 @@ export function snapshotFor(
     objectId: id,
     period: {
       from: `${data.asOf}T00:00:00+07:00`,
-      to: `${data.asOf}T18:00:00+07:00`,
+      to: `${data.asOf}T23:00:00+07:00`,
     },
     source: "Mock",
     metrics,

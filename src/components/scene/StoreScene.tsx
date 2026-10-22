@@ -13,7 +13,15 @@ import {
 } from "./StoreEnvironment";
 import { FixtureRenderer } from "./FixtureRenderer";
 import { SceneLabels } from "./SceneLabels";
-export default function StoreScene({ store }: { store: Store }) {
+import { HeatmapLayer } from "./HeatmapLayer";
+import type { SpatialDataset } from "@/types/spatial";
+export default function StoreScene({
+  store,
+  spatial,
+}: {
+  store: Store;
+  spatial: SpatialDataset;
+}) {
   return (
     <Canvas
       orthographic
@@ -40,6 +48,7 @@ export default function StoreScene({ store }: { store: Store }) {
         <StoreFloor store={store} />
         <StoreWalls store={store} />
         <ZoneRenderer store={store} />
+        <HeatmapLayer store={store} data={spatial} />
         {store.fixtures.map((f) => (
           <FixtureRenderer key={f.id} fixture={f} />
         ))}

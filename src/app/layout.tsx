@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
+import { Kanit } from "next/font/google";
 import "./globals.css";
 import "./workspace.css";
+import "./spatial.css";
+const kanit = Kanit({
+  subsets: ["thai", "latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-kanit",
+});
 export const metadata: Metadata = {
   title: "RetailVerse 3D — Smart Store Digital Twin",
   description:
@@ -12,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="th">
+    <html lang="th" className={kanit.variable}>
       <body>{children}</body>
     </html>
   );

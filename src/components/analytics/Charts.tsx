@@ -16,9 +16,9 @@ import {
 } from "recharts";
 import type { ChartDatum } from "@/types/analytics";
 const palette = [
-  "#516dcc",
+  "#02aba4",
   "#59a99a",
-  "#e4b063",
+  "#ffc815",
   "#af83bf",
   "#83b1d4",
   "#d3888b",
@@ -63,7 +63,7 @@ export function SalesTrendChart({
             type="monotone"
             dataKey="sales"
             name={unit === "THB" ? "ยอดขาย (THB)" : "เวลารอเฉลี่ย (นาที)"}
-            stroke="#516dcc"
+            stroke="#02aba4"
             strokeWidth={2}
             dot={false}
           />
@@ -107,7 +107,7 @@ export function CategoryComparisonChart({
           <Bar
             dataKey="sales"
             name={scenario ? "Contribution (THB)" : "ยอดขาย (THB)"}
-            fill="#516dcc"
+            fill="#02aba4"
             radius={[4, 4, 0, 0]}
           />
         </BarChart>
