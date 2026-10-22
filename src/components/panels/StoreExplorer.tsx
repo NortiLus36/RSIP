@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Warehouse,
   MapPin,
-  Box,
 } from "lucide-react";
 import { ZoneIcon } from "@/components/shared/ZoneIcon";
 import type { Store } from "@/types";
@@ -41,13 +40,12 @@ export function StoreExplorer({
   const visible = store.zones.filter(
     (z) =>
       matches(`${z.id} ${z.name} ${z.nameTh}`) ||
-      store.fixtures.some(
-        (f) =>
-          f.zoneId === z.id &&
-          (matches(`${f.id} ${f.name}`) ||
-            catalog.fixtureProducts.some(
-              (m) => m.fixtureId === f.id && productMatches(m.sku),
-            )),
+      catalog.products.some(
+        (p) =>
+          productMatches(p.sku) &&
+          catalog.categories.some(
+            (c) => c.id === p.categoryId && c.zoneId === z.id,
+          ),
       ) ||
       catalog.categories.some(
         (c) => c.zoneId === z.id && matches(`${c.nameTh} ${c.nameEn}`),
@@ -62,14 +60,14 @@ export function StoreExplorer({
         <span>Store Explorer</span>
         <span className="tiny-label">01</span>
       </div>
-      <p className="sidebar-subtitle">โซน → หมวดย่อย → ชั้นวาง → สินค้า</p>
+      <p className="sidebar-subtitle">หมวดหมู่ → หมวดย่อย → สินค้า</p>
       <label className="search">
         <Search size={15} />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="ค้นหาโซน / หมวด / SKU..."
-          aria-label="Search zones and fixtures"
+          placeholder="ค้นหาหมวด / สินค้า / SKU..."
+          aria-label="ค้นหาหมวดหมู่หรือสินค้า"
         />
       </label>
       <button
@@ -90,79 +88,45 @@ export function StoreExplorer({
             const subcategories = catalog.categories.filter(
               (c) => c.zoneId === z.id && c.parentId,
             );
-            const renderFixture = (
-              f: Store["fixtures"][number],
-              categoryId?: string,
-            ) => {
-              const key = `${categoryId ?? z.id}:${f.id}`;
-              const all = catalog.fixtureProducts
-                .filter((m) => m.fixtureId === f.id)
-                .map((m) => catalog.products.find((p) => p.sku === m.sku)!)
-                .filter((p) => !categoryId || p.categoryId === categoryId);
-              const products = all.filter(
-                (p) =>
-                  !q ||
-                  zoneMatch ||
-                  matches(`${f.id} ${f.name}`) ||
-                  matches(
-                    catalog.categories.find((c) => c.id === p.categoryId)
-                      ?.nameTh ?? "",
-                  ) ||
-                  productMatches(p.sku),
+            const zoneProducts = catalog.products.filter((p) =>
+              catalog.categories.some(
+                (c) => c.id === p.categoryId && c.zoneId === z.id,
+              ),
+            );
+            const renderProducts = (categoryId?: string) => {
+              const category = catalog.categories.find(
+                (c) => c.id === categoryId,
               );
-              if (
-                q &&
-                !zoneMatch &&
-                !matches(`${f.id} ${f.name}`) &&
-                !products.length
-              )
-                return null;
-              return (
-                <div key={key} className="tree-fixture">
-                  <div className="tree-line">
+              const categoryMatch =
+                category && matches(`${category.nameTh} ${category.nameEn}`);
+              return zoneProducts
+                .filter((p) => !categoryId || p.categoryId === categoryId)
+                .filter(
+                  (p) =>
+                    !q || zoneMatch || categoryMatch || productMatches(p.sku),
+                )
+                .map((p, index) => {
+                  const placement = catalog.fixtureProducts.find(
+                    (m) =>
+                      m.sku === p.sku &&
+                      fixtures.some((f) => f.id === m.fixtureId),
+                  );
+                  return (
                     <button
-                      className="tree-toggle"
-                      aria-label={`เปิดสินค้า ${f.id} ${categoryId ?? ""}`}
-                      aria-expanded={expanded.has(key) || !!q}
-                      onClick={() => toggle(key)}
+                      className={`sku-tree-row ${selectedSku === p.sku ? "selected" : ""}`}
+                      key={p.sku}
+                      onClick={() =>
+                        placement && selectSku(p.sku, placement.fixtureId)
+                      }
+                      aria-pressed={selectedSku === p.sku}
                     >
-                      {expanded.has(key) || q ? (
-                        <ChevronDown size={12} />
-                      ) : (
-                        <ChevronRight size={12} />
-                      )}
-                    </button>
-                    <button
-                      className={`fixture-row ${selectedId === f.id ? "selected" : ""}`}
-                      aria-pressed={selectedId === f.id}
-                      onClick={() => {
-                        select(f.id);
-                        expand(key);
-                      }}
-                    >
-                      <Box size={12} />
-                      <span>
-                        {f.name}
-                        <small>{f.id}</small>
+                      <span className="sku-tree-number" aria-hidden="true">
+                        {index + 1}.
                       </span>
+                      <span>{p.nameTh}</span>
                     </button>
-                  </div>
-                  {(expanded.has(key) || q) &&
-                    products.map((p) => (
-                      <button
-                        className={`sku-tree-row ${selectedSku === p.sku ? "selected" : ""}`}
-                        key={p.sku}
-                        onClick={() => selectSku(p.sku, f.id)}
-                        aria-pressed={selectedSku === p.sku}
-                      >
-                        <span>
-                          {p.nameTh}
-                          <small>{p.sku}</small>
-                        </span>
-                      </button>
-                    ))}
-                </div>
-              );
+                  );
+                });
             };
             return (
               <div key={z.id}>
@@ -194,40 +158,20 @@ export function StoreExplorer({
                       <ZoneIcon zoneId={z.id} size={19} />
                     </span>
                     <span>
-                      <strong>{z.name}</strong>
-                      <small>{z.nameTh}</small>
+                      <strong>{z.nameTh}</strong>
                     </span>
                   </button>
                 </div>
                 {zoneOpen &&
                   (subcategories.length
                     ? subcategories.map((c) => {
-                        const fs = fixtures.filter((f) =>
-                          catalog.fixtureProducts.some(
-                            (m) =>
-                              m.fixtureId === f.id &&
-                              catalog.products.some(
-                                (p) => p.sku === m.sku && p.categoryId === c.id,
-                              ),
-                          ),
-                        );
                         if (
                           q &&
                           !zoneMatch &&
                           !matches(`${c.nameTh} ${c.nameEn}`) &&
-                          !fs.some(
-                            (f) =>
-                              matches(`${f.id} ${f.name}`) ||
-                              catalog.fixtureProducts.some(
-                                (m) =>
-                                  m.fixtureId === f.id &&
-                                  catalog.products.some(
-                                    (p) =>
-                                      p.sku === m.sku &&
-                                      p.categoryId === c.id &&
-                                      productMatches(p.sku),
-                                  ),
-                              ),
+                          !zoneProducts.some(
+                            (p) =>
+                              p.categoryId === c.id && productMatches(p.sku),
                           )
                         )
                           return null;
@@ -245,12 +189,11 @@ export function StoreExplorer({
                               )}{" "}
                               {c.nameTh}
                             </button>
-                            {(expanded.has(c.id) || q) &&
-                              fs.map((f) => renderFixture(f, c.id))}
+                            {(expanded.has(c.id) || q) && renderProducts(c.id)}
                           </div>
                         );
                       })
-                    : fixtures.map((f) => renderFixture(f)))}
+                    : renderProducts())}
               </div>
             );
           })}

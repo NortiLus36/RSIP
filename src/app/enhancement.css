@@ -329,13 +329,20 @@
   padding: 8px 4px;
 }
 .sku-tree-row {
-  display: block;
-  margin-left: 24px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-left: 12px;
   padding: 8px;
   text-align: left;
-  width: calc(100% - 24px);
+  width: calc(100% - 12px);
   font-size: 10px;
   border-radius: 5px;
+}
+.sku-tree-number {
+  flex-shrink: 0;
+  color: #768a96;
+  font-variant-numeric: tabular-nums;
 }
 .sku-tree-row small {
   display: block;

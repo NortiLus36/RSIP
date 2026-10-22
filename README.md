@@ -72,9 +72,9 @@ Time Explorer supports date/hour, slider, Play/Pause/Reset, speed and collapse/e
 
 ## Ten-step demo
 
-1. Select Grocery in Store Explorer.
+1. Select อาหารแห้ง in Store Explorer.
 2. Expand ข้าวสาร.
-3. Open Grocery aisle 01 and select ข้าวหอมมะลิ 5 กก. (MOCK-SKU-001).
+3. Select ข้าวหอมมะลิ 5 กก. directly from the numbered product list (MOCK-SKU-001). All departments use category → subcategory → products, without a fixture level.
 4. Inspect shelf 0, warehouse 90 bags, incoming 20; shelf OOS remains true despite warehouse stock.
 5. Change Daily Demand from 8 to 100 bags/day.
 6. Suggested Order becomes 205 bags and Days of Supply 0.9 days (available 90, lead time 3, safety 15, eligible incoming 20). Reset Demo restores the SKU defaults.
@@ -85,7 +85,7 @@ Time Explorer supports date/hour, slider, Play/Pause/Reset, speed and collapse/e
 
 ## Tech stack and structure
 
-Next.js 16.4.2 App Router, React 19.3.1, TypeScript 5.9.3, Three.js 0.180.0, React Three Fiber 9.8.2, Drei 10.7.9, Zustand 5.0.15, Recharts 3.10.1, Lucide React and Tailwind CSS 4. Existing dependencies were reused; no new icon library or backend framework was added.
+Next.js 16.4.2 App Router, React 19.3.1, TypeScript 5.9.3, Three.js 0.180.0, React Three Fiber 9.8.2, Drei 10.7.9, Zustand 5.0.15, Recharts 3.10.1, Font Awesome category icons, Lucide React controls and Tailwind CSS 4. No backend framework was added.
 
 - `src/config`: editable floor plan, fixtures, environment paths, heatmap thresholds and help definitions.
 - `src/types/catalog.ts`: product, mapping, stock and planning contracts.
