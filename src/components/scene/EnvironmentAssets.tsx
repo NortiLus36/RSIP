@@ -63,9 +63,6 @@ export function ATMModel({
           size: [0.045, 0.04, 0.02] as Vec3,
         }))}
       />
-      <Html position={[0, 1.66, 0.38]} center style={{ pointerEvents: "none" }}>
-        <span className="atm-sign">ATM</span>
-      </Html>
     </group>
   );
 }
