@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Kanit } from "next/font/google";
+import "@fortawesome/fontawesome-svg-core/styles.css";
 import "./globals.css";
 import "./workspace.css";
 import "./spatial.css";

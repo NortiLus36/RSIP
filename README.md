@@ -54,7 +54,7 @@ Daily sales are ฿284,650. Gross profit is derived as ฿77,254.00; splitting f
 
 ## 3D architecture and performance
 
-Fourteen zones A–N contain 53 fixtures. The original A–M zone transforms remain. There are six checkout models, four colored ATMs, an electronics department with TV/fridge/microwave displays, receiving-aligned Cold Room, parked/moving carts and EAS gates. Office, Customer Service, First Aid and Baby Care support rooms are removed; the Baby & Kids merchandise department remains.
+Fourteen zones A–N contain 53 fixtures. Zones B and M are narrowed and their fixtures rearranged to leave a one-unit aisle beside H/I/J; other zone transforms remain. There are six checkout models, four colored ATMs, an electronics department with TV/fridge/microwave displays, receiving-aligned Cold Room, parked/moving carts and EAS gates. Office, Customer Service, First Aid and Baby Care support rooms are removed; the Baby & Kids merchandise department remains.
 
 React Three Fiber renders the scene with shared geometry/materials and instanced repeated furniture parts. Six customers and three staff use obstacle-aware waypoint paths, basic walking and attached carts. Two sliding doors react to people. Animation uses refs and frame callbacks; no per-frame React state or model per SKU. Pixel ratio is capped. Analytics tabs overlay the mounted Canvas, preserving camera/animation state. Drei Html labels are contained beneath dialogs and page overlays by an isolated stacking context.
 

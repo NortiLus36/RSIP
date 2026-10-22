@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useCursor } from "@react-three/drei";
 import { SceneHtml as Html } from "./SceneHtml";
+import { ZoneIcon } from "@/components/shared/ZoneIcon";
 import type { Store } from "@/types";
 import { useExplorer } from "@/stores/explorer";
 import { findSceneObject } from "@/lib/scene/camera";
@@ -34,8 +35,11 @@ export function SceneLabels({ store }: { store: Store }) {
           >
             <div
               className={`map-label ${selected === z.id ? "map-selected" : ""}`}
+              aria-label={z.nameTh}
             >
-              <b style={{ background: z.color }}>{z.id}</b>
+              <b style={{ background: z.color, color: "#34435b" }}>
+                <ZoneIcon zoneId={z.id} size={16} />
+              </b>
               <span>
                 {z.name}
                 <small>{z.nameTh}</small>

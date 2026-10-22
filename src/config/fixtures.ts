@@ -11,7 +11,7 @@ type Layout = {
   description: string;
   variant?: Fixture["variant"];
 };
-// Offsets are relative to the unchanged Phase 1 zone centers. Dimensions include all modeled parts.
+// Offsets are relative to configured zone centers. Dimensions include all modeled parts.
 export const fixtureLayouts: Layout[] = [
   {
     zone: "A",
@@ -29,7 +29,7 @@ export const fixtureLayouts: Layout[] = [
     count: 4,
     start: [0, -3.2],
     step: [0, 2.1],
-    size: [10, 1.65, 0.85],
+    size: [8, 1.65, 0.85],
     name: "Snack display",
     description: "ชั้นขนมหลายสี 4 ระดับ",
   },
@@ -158,8 +158,8 @@ export const fixtureLayouts: Layout[] = [
     zone: "M",
     kind: "clothes",
     count: 3,
-    start: [-4, -0.45],
-    step: [2.7, 0],
+    start: [-3.5, -0.45],
+    step: [2.35, 0],
     size: [2.1, 1.9, 1.8],
     name: "Clothing rack",
     description: "ราวโลหะและเสื้อแขวนแบบ low-poly",
@@ -168,7 +168,7 @@ export const fixtureLayouts: Layout[] = [
     zone: "M",
     kind: "folded",
     count: 1,
-    start: [4, 0.7],
+    start: [3.5, 0.7],
     step: [0, 0],
     size: [2, 1.2, 1.2],
     name: "Folded clothing",
@@ -178,7 +178,7 @@ export const fixtureLayouts: Layout[] = [
     zone: "M",
     kind: "shoes",
     count: 1,
-    start: [4, -1],
+    start: [3.5, -1],
     step: [0, 0],
     size: [2.1, 1.6, 0.8],
     name: "Shoe display",

@@ -7,39 +7,11 @@ import {
   Warehouse,
   MapPin,
   Box,
-  ShoppingBasket,
-  Cookie,
-  Apple,
-  Snowflake,
-  GlassWater,
-  House,
-  Heart,
-  Baby,
-  PawPrint,
-  Sandwich,
-  CreditCard,
-  Shirt,
-  Tv,
 } from "lucide-react";
+import { ZoneIcon } from "@/components/shared/ZoneIcon";
 import type { Store } from "@/types";
 import type { ProductCatalog } from "@/types/catalog";
 import { useExplorer } from "@/stores/explorer";
-const icons = {
-  A: ShoppingBasket,
-  B: Cookie,
-  C: Apple,
-  D: Snowflake,
-  E: GlassWater,
-  F: Warehouse,
-  G: House,
-  H: Heart,
-  I: Baby,
-  J: PawPrint,
-  K: Sandwich,
-  L: CreditCard,
-  M: Shirt,
-  N: Tv,
-};
 export function StoreExplorer({
   store,
   catalog,
@@ -112,7 +84,6 @@ export function StoreExplorer({
       <div className="zone-list">
         {(zonesOpen || q) &&
           visible.map((z) => {
-            const Icon = icons[z.id as keyof typeof icons] ?? Box;
             const zoneOpen = expanded.has(z.id) || !!q;
             const zoneMatch = matches(`${z.id} ${z.name} ${z.nameTh}`);
             const fixtures = store.fixtures.filter((f) => f.zoneId === z.id);
@@ -220,7 +191,7 @@ export function StoreExplorer({
                       className="zone-letter"
                       style={{ background: z.color + "45", color: "#34435b" }}
                     >
-                      <Icon size={19} />
+                      <ZoneIcon zoneId={z.id} size={19} />
                     </span>
                     <span>
                       <strong>{z.name}</strong>
