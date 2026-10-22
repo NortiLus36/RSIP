@@ -26,6 +26,7 @@ const colors = {
   pink: "#cc8fa9",
   purple: "#9a8ac2",
   paper: "#e3d6b9",
+  skin: "#d8ac8b",
 };
 export type MaterialName = keyof typeof colors;
 function createAssets() {

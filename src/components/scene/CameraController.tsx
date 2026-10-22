@@ -18,6 +18,8 @@ export function CameraController({ store }: { store: Store }) {
   const reset = useExplorer((s) => s.resetVersion);
   const focus = useExplorer((s) => s.focusVersion);
   const auto = useExplorer((s) => s.autoRotate);
+  const lastReset = useRef(reset);
+  const lastFocus = useRef(-1);
   useEffect(() => {
     const canvas = get().gl.domElement;
     canvas.tabIndex = 0;
@@ -51,6 +53,8 @@ export function CameraController({ store }: { store: Store }) {
     };
   }, [get]);
   useEffect(() => {
+    if (!first.current && lastReset.current === reset) return;
+    lastReset.current = reset;
     const camera = get().camera as OrthographicCamera;
     const frame = cameraFrame(
       storeBounds(store),
@@ -68,7 +72,8 @@ export function CameraController({ store }: { store: Store }) {
     } else goal.current = { target: frame.target, position, zoom: frame.zoom };
   }, [get, store, size.width, size.height, reset]);
   useEffect(() => {
-    if (!focus) return;
+    if (!focus || lastFocus.current === focus) return;
+    lastFocus.current = focus;
     const object = findSceneObject(store, useExplorer.getState().selectedId);
     if (!object) return;
     const camera = get().camera;

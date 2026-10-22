@@ -1,4 +1,5 @@
 "use client";
+import { KPIInfoPopover } from "@/components/analytics/KPIInfoPopover";
 import type { SpatialDataset } from "@/types/spatial";
 import { useSpatial } from "@/stores/spatial";
 import { zoneAt } from "@/lib/analytics/spatial";
@@ -68,7 +69,10 @@ export function SpatialInspector({
       </div>
       {chart && (
         <>
-          <h3>Zone Occupancy by Hour</h3>
+          <h3>
+            Zone Occupancy by Hour
+            <KPIInfoPopover topic="trend" />
+          </h3>
           <HourChart
             data={data}
             date={date}
@@ -76,7 +80,10 @@ export function SpatialInspector({
             metric="occupancy"
             selectedHour={hour}
           />
-          <h3>Zone Sales by Hour</h3>
+          <h3>
+            Zone Sales by Hour
+            <KPIInfoPopover topic="trend" />
+          </h3>
           <HourChart
             data={data}
             date={date}

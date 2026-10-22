@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import type { Store } from "@/types";
 import type { RetailDataset, AnalyticsFilter } from "@/types/analytics";
+import { KPIInfoPopover } from "./KPIInfoPopover";
 import {
   currentRows,
   salesTotals,
@@ -26,7 +27,10 @@ export function KPIStatCard({
 }) {
   return (
     <article className="analytics-stat">
-      <span>{label}</span>
+      <span>
+        {label}
+        <KPIInfoPopover topic={label} />
+      </span>
       <strong>
         {value === null
           ? "N/A"
@@ -163,7 +167,10 @@ export function AnalyticsView({
         />
       </div>
       <div className="chart-card">
-        <h3>Sales Trend · ข้อมูลย้อนหลัง</h3>
+        <h3>
+          Sales Trend · ข้อมูลย้อนหลัง
+          <KPIInfoPopover topic="trend" />
+        </h3>
         <p>
           {weekly ? "สองช่วง ช่วงละ 7 วัน" : "รายวันย้อนหลัง 14 วัน"} ·
           กราฟนี้แสดงประวัติ ขอบเขตเวลาต่างจาก KPI เมื่อเลือกวันล่าสุด
@@ -172,11 +179,17 @@ export function AnalyticsView({
       </div>
       <div className="chart-columns">
         <div className="chart-card">
-          <h3>Sales by Category</h3>
+          <h3>
+            Sales by Category
+            <KPIInfoPopover topic="category" />
+          </h3>
           <CategoryComparisonChart data={compared} />
         </div>
         <div className="chart-card">
-          <h3>Sales Composition</h3>
+          <h3>
+            Sales Composition
+            <KPIInfoPopover topic="composition" />
+          </h3>
           <CompositionChart data={compared} />
         </div>
       </div>

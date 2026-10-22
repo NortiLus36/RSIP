@@ -1,4 +1,5 @@
 "use client";
+import { KPIInfoPopover } from "@/components/analytics/KPIInfoPopover";
 import { useMemo } from "react";
 import {
   ResponsiveContainer,
@@ -166,7 +167,10 @@ export function PeakAnalytics({
       </div>
       <div className="peak-chart-grid">
         <article className="chart-card">
-          <h3>Hourly Customer Traffic</h3>
+          <h3>
+            Hourly Customer Traffic
+            <KPIInfoPopover topic="trend" />
+          </h3>
           <p>
             ผู้เข้าร้านต่อชั่วโมง · เส้นเหลือง = daily peak · เส้นเขียว =
             selected
@@ -174,7 +178,10 @@ export function PeakAnalytics({
           <HourChart data={data} date={date} selectedHour={hour} />
         </article>
         <article className="chart-card">
-          <h3>Sales by Hour</h3>
+          <h3>
+            Sales by Hour
+            <KPIInfoPopover topic="trend" />
+          </h3>
           <p>THB ต่อชั่วโมง · รวมวันตรงกับข้อมูล Phase 3</p>
           <HourChart
             data={data}
@@ -184,7 +191,10 @@ export function PeakAnalytics({
           />
         </article>
         <article className="chart-card">
-          <h3>Top 3 Busiest Zones</h3>
+          <h3>
+            Top 3 Busiest Zones
+            <KPIInfoPopover topic="category" />
+          </h3>
           <p>
             เรียงจาก Occupancy ณ {timeLabel(hour)} · ไม่ใช่ Footfall ทั้งวัน
           </p>

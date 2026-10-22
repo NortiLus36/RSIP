@@ -6,20 +6,35 @@ import {
   Orbit,
   Layers,
   BrickWall,
+  Users,
 } from "lucide-react";
 import { useExplorer } from "@/stores/explorer";
 import { useSpatial } from "@/stores/spatial";
 import type { DataLayer } from "@/types/spatial";
+import { useEnvironment } from "@/stores/environment";
 export function SceneToolbar() {
   const s = useExplorer();
   const layer = useSpatial((s) => s.activeDataLayer);
   const setLayer = useSpatial((s) => s.setLayer);
+  const paused = useEnvironment((s) => s.paused),
+    togglePeople = useEnvironment((s) => s.toggle);
   return (
     <div className="scene-toolbar" role="toolbar" aria-label="Scene controls">
       <button onClick={s.reset} title="Reset camera" aria-label="Reset camera">
         <RotateCcw size={17} />
       </button>
       <i />
+      <button
+        aria-label={
+          paused ? "Resume people animation" : "Pause people animation"
+        }
+        aria-pressed={!paused}
+        className={!paused ? "on" : ""}
+        onClick={togglePeople}
+        title="ภาพประกอบการเดิน แยกจากข้อมูล KPI"
+      >
+        <Users size={17} />
+      </button>
       {(
         [
           { key: "labels", icon: Tags, label: "Toggle labels" },

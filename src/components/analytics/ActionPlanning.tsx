@@ -24,6 +24,24 @@ export function ActionPlanning({
   });
   const [status, setStatus] = useState<ManagementAction["status"]>("Open");
   const [error, setError] = useState("");
+  const [editing, setEditing] = useState<string | null>(null);
+  const [zoneFilter, setZoneFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [ascending, setAscending] = useState(false);
+  const edit = (a: ManagementAction) => {
+    setEditing(a.id);
+    setProblem(a.problem);
+    setOwner(a.owner);
+    setZone(a.zoneId);
+    setCritical(a.critical);
+    setStatus(a.status);
+    setScores({
+      severity: String(a.severity),
+      urgency: String(a.urgency),
+      impact: String(a.impact),
+    });
+    setError("");
+  };
   const add = () => {
     try {
       const severity = Number(scores.severity),
@@ -32,27 +50,37 @@ export function ActionPlanning({
       priorityScore(severity, urgency, impact);
       if (!problem.trim() || !owner.trim())
         throw new Error("กรุณาระบุ Problem และ Owner");
-      setActions((a) => [
-        ...a,
-        {
-          id: `action-local-${Date.now()}`,
-          problem: problem.trim(),
-          zoneId: zone,
-          severity,
-          urgency,
-          impact,
-          owner: owner.trim(),
-          status,
-          critical,
-        },
-      ]);
+      const updated: ManagementAction = {
+        id: editing ?? `action-local-${crypto.randomUUID()}`,
+        problem: problem.trim(),
+        zoneId: zone,
+        severity,
+        urgency,
+        impact,
+        owner: owner.trim(),
+        status,
+        critical,
+      };
+      setActions((a) =>
+        editing
+          ? a.map((item) => (item.id === editing ? updated : item))
+          : [...a, updated],
+      );
+      setEditing(null);
       setProblem("");
       setError("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "ข้อมูลไม่ถูกต้อง");
     }
   };
-  const { critical: criticalItems, normal } = prioritizeActions(actions);
+  const { critical: criticalItems, normal } = prioritizeActions(
+    actions.filter(
+      (a) =>
+        (!zoneFilter || a.zoneId === zoneFilter) &&
+        (!statusFilter || a.status === statusFilter),
+    ),
+  );
+  if (ascending) normal.reverse();
   const table = (items: ManagementAction[], isCritical = false) => (
     <div className="table-scroll">
       <table>
@@ -60,9 +88,13 @@ export function ActionPlanning({
           <tr>
             <th>Problem</th>
             <th>Zone</th>
+            <th>Severity</th>
+            <th>Urgency</th>
+            <th>Business Impact</th>
             <th>{isCritical ? "Critical" : "Priority Score"}</th>
             <th>Owner</th>
             <th>Status</th>
+            <th>แก้ไข</th>
           </tr>
         </thead>
         <tbody>
@@ -70,6 +102,9 @@ export function ActionPlanning({
             <tr key={a.id}>
               <td>{a.problem}</td>
               <td>{a.zoneId}</td>
+              <td>{a.severity}</td>
+              <td>{a.urgency}</td>
+              <td>{a.impact}</td>
               <td>
                 {isCritical
                   ? a.critical.toUpperCase()
@@ -98,6 +133,15 @@ export function ActionPlanning({
                     <option key={s}>{s}</option>
                   ))}
                 </select>
+              </td>
+              <td>
+                <button
+                  className="text-button"
+                  onClick={() => edit(a)}
+                  aria-label={`Edit ${a.id}`}
+                >
+                  แก้ไข
+                </button>
               </td>
             </tr>
           ))}
@@ -175,13 +219,61 @@ export function ActionPlanning({
         </label>
       </div>
       <button className="primary-button" onClick={add}>
-        เพิ่ม Action
+        {editing ? "บันทึกการแก้ไข" : "เพิ่ม Action"}
       </button>
+      {editing && (
+        <button
+          className="text-button"
+          onClick={() => {
+            setEditing(null);
+            setProblem("");
+            setError("");
+          }}
+        >
+          ยกเลิกการแก้ไข
+        </button>
+      )}
       {error && (
         <p className="field-error" role="alert">
           {error}
         </p>
       )}
+      <div className="analytics-filters">
+        <label>
+          กรอง Zone
+          <select
+            value={zoneFilter}
+            onChange={(e) => setZoneFilter(e.target.value)}
+          >
+            <option value="">ทุก Zone</option>
+            {store.zones.map((z) => (
+              <option key={z.id}>{z.id}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          กรอง Status
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">ทุกสถานะ</option>
+            {["Open", "In progress", "Done"].map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          เรียง Priority
+          <select
+            value={ascending ? "asc" : "desc"}
+            onChange={(e) => setAscending(e.target.value === "asc")}
+          >
+            <option value="desc">คะแนนสูงก่อน</option>
+            <option value="asc">คะแนนต่ำก่อน</option>
+          </select>
+        </label>
+      </div>
       <h3>Safety / Legal Critical · แยกจากคะแนนปกติ</h3>
       <p className="form-hint">
         ต้องประเมินและรับผิดชอบแยก ไม่ลดลำดับด้วยคะแนนรวม

@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { floorPlan, categories } from "../src/config/floor-plan";
 import { hourlyTraffic, snapshots, inventory } from "../src/data/mock";
 import { retailProvider } from "../src/data/providers";
-test("floor plan contains all 13 zones and globally unique object IDs", () => {
+test("floor plan contains all 14 zones and globally unique object IDs", () => {
   assert.deepEqual(
     floorPlan.zones.map((z) => z.id).sort(),
-    "ABCDEFGHIJKLM".split(""),
+    "ABCDEFGHIJKLMN".split(""),
   );
   const objects = [
     floorPlan,

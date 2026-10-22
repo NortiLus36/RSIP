@@ -10,6 +10,7 @@ import {
 import { validateDraft } from "@/lib/analytics/validation";
 import { CategoryComparisonChart } from "./Charts";
 import { contributionInsight } from "@/lib/analytics/insights";
+import { KPIInfoPopover } from "./KPIInfoPopover";
 const format = (n: number | null) =>
   n === null
     ? "N/A"
@@ -80,6 +81,7 @@ export function CalculatorForm({
           <label key={f.key} htmlFor={`${id}-${f.key}`}>
             <span>
               {f.label}
+              <KPIInfoPopover topic={f.label} />
               <small>{f.unit}</small>
             </span>
             <input
@@ -115,7 +117,10 @@ export function CalculatorForm({
         {results.map((r) => (
           <article key={r.label}>
             <div>
-              <span>{r.label}</span>
+              <span>
+                {r.label}
+                <KPIInfoPopover topic={r.label} />
+              </span>
               <strong data-result={r.label}>
                 {format(r.value)} <small>{r.unit}</small>
               </strong>

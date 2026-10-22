@@ -16,6 +16,7 @@ import { InventoryPlanner } from "@/components/analytics/InventoryPlanner";
 import { AnalyticsView } from "@/components/analytics/AnalyticsView";
 import { SalesTrendChart } from "@/components/analytics/Charts";
 import { SpatialInspector } from "@/components/spatial/SpatialInspector";
+import { KPIInfoPopover } from "@/components/analytics/KPIInfoPopover";
 export function ObjectInspector({
   data,
   collapsed,
@@ -182,7 +183,10 @@ function InspectorBody({
                   )
                   .map((m) => (
                     <div key={m.key} title={m.definition}>
-                      <span>{m.label}</span>
+                      <span>
+                        {m.label}
+                        <KPIInfoPopover topic={m.key} />
+                      </span>
                       <strong data-inspector-kpi={m.key}>
                         {formatMetric(m.value, m.unit)}
                         {m.unit === "minutes" ? " นาที" : ""}
@@ -280,7 +284,10 @@ function InspectorBody({
               !collapsed &&
               (checkout ? (
                 <div className="chart-card">
-                  <h3>เวลารอชำระเงินย้อนหลัง</h3>
+                  <h3>
+                    เวลารอชำระเงินย้อนหลัง
+                    <KPIInfoPopover topic="trend" />
+                  </h3>
                   <p className="data-period">
                     รายวัน · {dataset.checkout[0].date} – {dataset.asOf} · นาที
                   </p>

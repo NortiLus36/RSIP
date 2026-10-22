@@ -23,6 +23,10 @@ WebGL is required for the scene; the explorer and dashboard remain available thr
 
 Development and production builds use Next.js's supported webpack option after a Turbopack worker failure on this Windows setup. `next/font/google` downloads Kanit at build time; the browser then loads the bundled font locally. The first build needs access to official Google Fonts.
 
+## Store enhancement update
+
+See [Store enhancement report](docs/STORE-ENHANCEMENT.md) for the P0/P1 changes and browser evidence. Six customers and three staff follow obstacle-aware paths, two customers push carts, and automatic entrance/exit doors respond to people. Four colored ATMs, cart parking, EAS gates, Cold Room receiving alignment and Zone N appliance displays extend the scene. Pause people independently of time/KPIs. Time Explorer collapses without resetting playback or camera. Configurable Thai KPI/chart dialogs explain seven teaching fields. The official Next development indicator is disabled.
+
 ## Features and layout
 
 ![Phase 4 density heatmap](docs/phase4-density.jpg)
@@ -33,12 +37,12 @@ Development and production builds use Next.js's supported webpack option after a
 - Peak Time dashboard: hourly entries and sales Line charts, clickable hour selection, selected markers, Top 3 occupancy Bar chart and selected-hour KPIs. Inspector adds hourly Overview context and a Traffic tab without resetting calculators or camera.
 
 - Thai-first fullscreen `100dvh` workspace with fixed navbar, internal explorer scroll, full remaining-space canvas, collapsible right drawer with Overview / Inventory / Analytics tabs and collapsible seven-KPI store strip. The document does not scroll. Mobile uses a bottom drawer with separate space for the model.
-- Thirteen zones A–M with 51 detailed, selectable fixtures: multi-tier product shelves, produce bins, glass refrigerators, warehouse racks/pallets/trolley, bakery counters, eight checkout/POS stations and apparel racks with hanging clothes, folded clothing and shoes. The Phase 1 zone coordinates are unchanged.
+- Fourteen zones A–N with 53 detailed, selectable fixtures: multi-tier product shelves, produce bins, glass refrigerators, warehouse racks/pallets/trolley, bakery counters, six checkout/POS stations and apparel racks with hanging clothes, folded clothing and shoes. The Phase 1 zone coordinates are unchanged.
 - Orthographic OrbitControls with drag rotation, wheel zoom, right-drag pan, smooth synchronized camera/target focus, reset, labels, grid, walls and auto rotation. After focusing the canvas, arrow keys also pan. Manual camera input or selection stops auto rotation; manual input interrupts a focus transition.
 - Hover for cursor/outline/tooltip. Click a model to select without moving the camera; select in the explorer or press Focus Camera to animate toward it. Empty-space click or inspector Close clears selection without resetting the view. Search matches Thai/English names, IDs and fixtures. Groups expand/collapse.
 - Inspector shows daily sales, profit/margin, shelf OOS and stock from provider records; checkout fixtures show weighted wait KPIs/history and explain why inventory planning is not applicable. Missing data displays `No Data`.
 - Inventory planning offers SKU-linked demand, lead time, safety stock, available/incoming stock and arrival timing. Results show formula, substitution, units and assumptions. Forms update immediately and reset to Demo without modifying actual mock KPIs or the camera.
-- Analytics Studio has eight modules: Retail KPI, dashboard/charts, pivot-like data exploration, inventory planning, retail operations, customer experience, contribution A/B comparison and action planning. Daily/rolling-weekly zone/category/fixture filters drive actual dataset charts; normal priorities and safety/legal critical queues are separate.
+- Analytics Studio has seven modules: Retail KPI, dashboard/charts, pivot-like data exploration, inventory planning, retail operations, customer experience and contribution A/B comparison. Action Planning has its own `/operations/action-planning` route with add/edit, status, filters, sorting and a separate critical queue. Daily/rolling-weekly zone/category/fixture filters drive actual dataset charts; normal priorities and safety/legal critical queues are separate.
 - Loading, WebGL and render-error fallbacks; browser-only lazy scene import (`ssr: false`).
 - A single mock source accessed through an asynchronous provider, shared domain types, analytics and simulation contracts. Store/zone/fixture snapshots include units, definitions, source and period (Asia/Bangkok).
 
@@ -80,7 +84,7 @@ npm test
 npm run build
 ```
 
-41 tests cover formulas, invalid inputs, source reconciliation, noon/evening/tied peaks, density color changes within threshold bands, missing data, date/hour validation, playback endpoint/cleanup, independent scene state and floor/camera contracts. See [Phase 4 fix verification](docs/PHASE4-FIX.md) for root causes, calculator menu paths and browser evidence, and [Phase 4 report](docs/PHASE4.md) for the original architecture. Historical [Phase 3](docs/PHASE3.md), [Phase 2](docs/PHASE2.md) and [Phase 1](docs/PHASE1.md) reports remain available.
+49 tests cover formulas, invalid inputs, source reconciliation, noon/evening/tied peaks, density color changes within threshold bands, missing data, date/hour validation, playback endpoint/cleanup, independent scene state and floor/camera contracts. See [Phase 4 fix verification](docs/PHASE4-FIX.md) for root causes, calculator menu paths and browser evidence, and [Phase 4 report](docs/PHASE4.md) for the original architecture. Historical [Phase 3](docs/PHASE3.md), [Phase 2](docs/PHASE2.md) and [Phase 1](docs/PHASE1.md) reports remain available.
 
 ## Analytics definitions
 
@@ -102,9 +106,9 @@ To use ASP.NET Core (.NET 10), implement `RetailDataProvider` with HTTP calls an
 
 ## Known limits / Phase 4
 
-Floor plan/models remain approximate and stylized. There are 40 representative mock SKUs, including two warehouse-only SKUs, rather than a complete retail catalog. Inspector content intentionally scrolls; outer Explore does not. Global analytics filters are independent of scene selection; Inspector analytics always use the selected object.
+Floor plan/models remain approximate and stylized. There are 44 representative mock SKUs, including two warehouse-only SKUs, rather than a complete retail catalog. Inspector content intentionally scrolls; outer Explore does not. Global analytics filters are independent of scene selection; Inspector analytics always use the selected object.
 
-Scenario drafts are local: Inspector Inventory retains drafts across its tabs and timeline changes, but switching object/SKU resets its demo. Global module drafts and action edits reset when leaving their screen; there is no persistence, actual ordering or task assignment. Advanced chart animation, exports and custom chart configuration remain deferred. Heatmaps use 13 zone meshes, not spatial interpolation or customer tracking. No backend, real inventory feeds, advanced statistical forecast, animated customer movement, AI recommendations, English locale switch or dark theme were added. No new dependencies were required.
+Scenario drafts are local: Inspector Inventory retains drafts across its tabs and timeline changes, but switching object/SKU resets its demo. Global module drafts and action edits reset when leaving their screen; there is no persistence, actual ordering or task assignment. Advanced chart animation, exports and custom chart configuration remain deferred. Heatmaps use 14 zone meshes, not spatial interpolation or customer tracking. No backend, real inventory feeds, advanced statistical forecast, advanced crowd simulation, AI recommendations, English locale switch or dark theme were added. No new dependencies were required.
 
 `npm audit` on 21 October 2026 reports five high advisories in the **development-only ESLint chain**, rooted in `braces` through micromatch/fast-glob. npm suggests downgrading eslint-config-next to 14.x, which conflicts with this Next 16 foundation; no forced downgrade was applied. Production dependency audit is recorded separately in the delivery report. Review upstream patches before deploying a development service that accepts untrusted glob patterns.
 

@@ -15,6 +15,8 @@ import { FixtureRenderer } from "./FixtureRenderer";
 import { SceneLabels } from "./SceneLabels";
 import { HeatmapLayer } from "./HeatmapLayer";
 import type { SpatialDataset } from "@/types/spatial";
+import { EnvironmentAssets } from "./EnvironmentAssets";
+import { StoreActivity } from "./activity/StoreActivity";
 export default function StoreScene({
   store,
   spatial,
@@ -48,6 +50,8 @@ export default function StoreScene({
         <StoreFloor store={store} />
         <StoreWalls store={store} />
         <ZoneRenderer store={store} />
+        <EnvironmentAssets store={store} />
+        <StoreActivity store={store} />
         <HeatmapLayer store={store} data={spatial} />
         {store.fixtures.map((f) => (
           <FixtureRenderer key={f.id} fixture={f} />

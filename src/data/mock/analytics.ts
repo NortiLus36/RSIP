@@ -13,7 +13,8 @@ const weights: Record<string, number> = {
   I: 4,
   J: 3,
   K: 6,
-  M: 13,
+  M: 10,
+  N: 3,
 };
 const costRatios: Record<string, number> = {
   A: 0.78,
@@ -27,12 +28,16 @@ const costRatios: Record<string, number> = {
   J: 0.75,
   K: 0.6,
   M: 0.58,
+  N: 0.82,
 };
 const dates = Array.from(
   { length: 14 },
   (_, i) => `2026-10-${String(i + 9).padStart(2, "0")}`,
 );
 const sales: SalesRecord[] = [];
+const checkoutCount = floorPlan.fixtures.filter(
+  (f) => f.kind === "checkout",
+).length;
 dates.forEach((date, day) => {
   const totalCents = Math.round(28465000 * (0.7 + (day * 0.3) / 13));
   let allocated = 0;
@@ -91,7 +96,8 @@ export const analyticsDataset: RetailDataset = {
       .filter((f) => f.kind === "checkout")
       .map((f, index) => {
         const transactions =
-          Math.floor((600 + i * 24) / 8) + (index < (600 + i * 24) % 8 ? 1 : 0);
+          Math.floor((600 + i * 24) / checkoutCount) +
+          (index < (600 + i * 24) % checkoutCount ? 1 : 0);
         return {
           date,
           fixtureId: f.id,

@@ -7,7 +7,6 @@ import { CalculatorForm } from "./CalculatorForm";
 import { AnalyticsView } from "./AnalyticsView";
 import { InventoryPlanner } from "./InventoryPlanner";
 import { DataExploration } from "./DataExploration";
-import { ActionPlanning } from "./ActionPlanning";
 const modules = [
   ["dashboard", "Dashboard & Charts"],
   ["retail", "Retail KPI"],
@@ -16,24 +15,15 @@ const modules = [
   ["operations", "Retail Operations"],
   ["experience", "Customer Experience"],
   ["scenario", "Decision Simulator"],
-  ["actions", "Action Planning"],
 ] as const;
-export function AnalyticsWorkspace({
-  data,
-  operations = false,
-}: {
-  data: DashboardData;
-  operations?: boolean;
-}) {
-  const [module, setModule] = useState<string>(
-    operations ? "actions" : "dashboard",
-  );
+export function AnalyticsWorkspace({ data }: { data: DashboardData }) {
+  const [module, setModule] = useState<string>("dashboard");
   return (
     <div className="analytics-workspace">
       <header>
         <div className="eyebrow">RETAIL INTELLIGENCE · DEMO</div>
         <h1>
-          {operations ? "Operations & Action Planning" : "Analytics Studio"}{" "}
+          Analytics Studio{" "}
           <small>ข้อมูลสังเคราะห์ · ไม่ใช่ผลการดำเนินงานจริง</small>
         </h1>
       </header>
@@ -55,11 +45,6 @@ export function AnalyticsWorkspace({
           <DataExploration dataset={data.dataset} store={data.store} />
         ) : module === "inventory" ? (
           <InventoryPlanner dataset={data.dataset} items={data.inventory} />
-        ) : module === "actions" ? (
-          <ActionPlanning
-            store={data.store}
-            initialActions={data.dataset.actions}
-          />
         ) : (
           <CalculatorForm
             key={module}

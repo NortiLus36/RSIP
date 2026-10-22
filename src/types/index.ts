@@ -33,7 +33,9 @@ export interface Fixture {
     | "checkout"
     | "clothes"
     | "folded"
-    | "shoes";
+    | "shoes"
+    | "electronics";
+  variant?: "television" | "fridge" | "microwave" | "small-appliances";
   description: string;
   transform: Transform;
 }

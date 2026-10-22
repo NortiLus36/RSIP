@@ -3,6 +3,7 @@ import { memo } from "react";
 import type { Fixture } from "@/types";
 import { useExplorer } from "@/stores/explorer";
 import { InteractiveObject, SelectionHighlight } from "./InteractiveObject";
+import { ElectronicsDisplay } from "./fixtures/ElectronicsDisplay";
 import {
   ProductShelf,
   ProduceBins,
@@ -37,7 +38,9 @@ export const FixtureRenderer = memo(function FixtureRenderer({
                 ? ClothingRack
                 : fixture.kind === "bakery"
                   ? BakeryCounter
-                  : SmallDisplay;
+                  : fixture.kind === "electronics"
+                    ? ElectronicsDisplay
+                    : SmallDisplay;
   return (
     <>
       <InteractiveObject id={fixture.id}>

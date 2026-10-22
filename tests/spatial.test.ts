@@ -126,7 +126,7 @@ test("three distinct complete days use all floor-plan zone and fixture identitie
     data.hours,
     Array.from({ length: 15 }, (_, i) => i + 8),
   );
-  assert.equal(data.zones.length, 3 * 15 * 13);
+  assert.equal(data.zones.length, 3 * 15 * floorPlan.zones.length);
   for (const r of data.zones)
     assert.ok(floorPlan.zones.some((z) => z.id === r.zoneId));
   for (const r of data.stock)

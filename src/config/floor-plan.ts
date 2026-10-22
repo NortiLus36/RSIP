@@ -181,6 +181,17 @@ export const zones: Zone[] = [
     12,
     4,
   ),
+  zone(
+    "N",
+    "Electronics & Appliances",
+    "เครื่องใช้ไฟฟ้า",
+    "โทรทัศน์ ตู้เย็น ไมโครเวฟ และเครื่องใช้ไฟฟ้าขนาดเล็ก",
+    "#9dbbcf",
+    12,
+    4,
+    5,
+    9,
+  ),
 ];
 const support = (
   id: string,
@@ -200,9 +211,9 @@ export const floorPlan: Store = {
   id: "store-001",
   name: "Demo Store 001",
   boundary: [
-    [-16, 22],
-    [16, 22],
-    [16, -25],
+    [-16, 24],
+    [22, 24],
+    [22, -25],
     [5, -25],
     [-16, -14],
   ],
@@ -210,18 +221,15 @@ export const floorPlan: Store = {
   fixtures: buildFixtures(zones),
   supportAreas: [
     support("loading", "Loading Dock", "ทางรับสินค้า", 13, -20, 4, 8),
-    support("cold", "Cold Room", "ห้องเย็น", 10, -13, 4, 5),
+    support("cold", "Cold Room", "ห้องเย็น", 18, -20, 4, 5),
     support("staff", "Staff Room", "ห้องพักพนักงาน", 8, -23, 5, 3),
-    support("office", "Office", "สำนักงาน", 12, 1.5, 4, 3),
-    support("service", "Customer Service", "บริการลูกค้า", 12, 5, 4, 3),
-    support("first-aid", "First Aid", "ห้องพยาบาล", 12, 8.5, 4, 3),
     support("restroom", "Restroom", "ห้องน้ำ", 12, 12, 4, 3),
-    support("baby", "Baby Care Room", "ห้องแม่และเด็ก", 12, 15.5, 4, 3),
     support("atm", "ATM / Service", "ATM / บริการ", 12, 19, 4, 3),
-    support("entrance", "Entrance", "ทางเข้า", -3, 21, 4, 1.2),
-    support("exit", "Exit", "ทางออก", 3, 21, 4, 1.2),
+    support("entrance", "Entrance", "ทางเข้า", -3, 23.4, 4, 1.2),
+    support("exit", "Exit", "ทางออก", 3, 23.4, 4, 1.2),
   ],
 };
+export { storeEnvironment } from "./store-environment";
 export const categories: ProductCategory[] = zones.map((z) => ({
   id: z.categoryId,
   name: z.nameTh,

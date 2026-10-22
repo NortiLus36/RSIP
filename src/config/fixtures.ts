@@ -9,6 +9,7 @@ type Layout = {
   size: Vec3;
   name: string;
   description: string;
+  variant?: Fixture["variant"];
 };
 // Offsets are relative to the unchanged Phase 1 zone centers. Dimensions include all modeled parts.
 export const fixtureLayouts: Layout[] = [
@@ -145,9 +146,9 @@ export const fixtureLayouts: Layout[] = [
   {
     zone: "L",
     kind: "checkout",
-    count: 8,
-    start: [-9.5, 0],
-    step: [2.7, 0],
+    count: 6,
+    start: [-9, 0],
+    step: [3.6, 0],
     size: [1.65, 1.45, 2.7],
     name: "Checkout",
     description:
@@ -184,6 +185,25 @@ export const fixtureLayouts: Layout[] = [
     description: "ชั้นรองเท้าพร้อมรองเท้าจำลอง",
   },
 ];
+const electronics: NonNullable<Fixture["variant"]>[] = [
+  "television",
+  "fridge",
+  "microwave",
+  "small-appliances",
+];
+electronics.forEach((variant, i) =>
+  fixtureLayouts.push({
+    zone: "N",
+    kind: "electronics",
+    count: 1,
+    start: [0, -3.3 + i * 2.2],
+    step: [0, 0],
+    size: [3.4, 1.85, 1.1],
+    name: variant,
+    description: `เครื่องใช้ไฟฟ้าจำลอง · ${variant}`,
+    variant,
+  }),
+);
 export function buildFixtures(zones: Zone[]): Fixture[] {
   const counters = new Map<string, number>();
   return fixtureLayouts.flatMap((layout) => {
@@ -198,6 +218,7 @@ export function buildFixtures(zones: Zone[]): Fixture[] {
         kind: layout.kind,
         name: `${layout.name} ${String(index).padStart(2, "0")}`,
         description: layout.description,
+        ...(layout.variant ? { variant: layout.variant } : {}),
         transform: {
           position: [
             zone.transform.position[0] + layout.start[0] + layout.step[0] * i,
@@ -223,4 +244,5 @@ export const fixtureTypeNames: Record<Fixture["kind"], string> = {
   clothes: "ราวแขวนเสื้อผ้า",
   folded: "โต๊ะเสื้อผ้าพับ",
   shoes: "ชั้นรองเท้า",
+  electronics: "เครื่องใช้ไฟฟ้า",
 };
