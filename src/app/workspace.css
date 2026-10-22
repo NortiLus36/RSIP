@@ -92,6 +92,9 @@ body {
   position: absolute;
   inset: 0;
   min-height: 0;
+  /* Keep Drei's depth-based HTML z-indices inside the scene layer. */
+  isolation: isolate;
+  z-index: 0;
 }
 .phase3 .workspace-overlay {
   position: absolute;

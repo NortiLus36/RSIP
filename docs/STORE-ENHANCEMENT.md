@@ -50,3 +50,9 @@ Screenshots: [ATM models](enhancement-atm.jpg), [entrance and people](enhancemen
 Layout/data: `config/floor-plan.ts`, `fixtures.ts`, `store-environment.ts`, `data/mock/analytics.ts`, shared types. Scene: `EnvironmentAssets`, `ElectronicsDisplay`, activity components, `lib/scene/navigation.ts`, scene assets/rendering/toolbar and independent environment store. UI: Workspace/routes, Timeline, CameraController, ActionPlanning, KPIInfoPopover/help configuration, calculator/card/chart/Inspector integrations and `app/enhancement.css`. Tests: new enhancement coverage and updated floor-plan/spatial expectations. README and this report describe current behavior.
 
 P2 advanced crowd avoidance, KPI-driven queue behavior and detailed character animation remain deferred. Models are stylized approximate assets. Basic routes avoid static objects; actor yielding is deliberately simpler than continuous collision physics.
+
+## Follow-up: scene label stacking
+
+Character, ATM and environment Html labels used Drei's large depth-based z-indices, which escaped above the KPI dialog and analytics page overlays. The canvas container now establishes an isolated stacking context at z-index 0. All scene labels stay beneath controls, Inspector, Analytics/Peak Time and portaled dialogs while the mounted scene preserves its camera and animation state. No label visibility toggle or unmount is required when switching pages.
+
+Verified the Gross Profit popup, Peak Time and Analytics visually with all nine actor labels still mounted behind them. Returning to Explore restores the visible scene. Optimized build including TypeScript passed; a fresh-tab Explore → Peak Time → Analytics → Explore cycle logged zero errors. Evidence: [popup](label-layer-popup.jpg), [Peak Time](label-layer-peak.jpg), [Analytics](label-layer-analytics.jpg).
