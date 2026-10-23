@@ -9,9 +9,11 @@ export function HomeWorkspace(data: DashboardData) {
   const initialTab =
     view === "analytics"
       ? "Analytics"
-      : view === "peak"
-        ? "Peak Time"
-        : "Explore";
+      : view === "data"
+        ? "Data Management"
+        : view === "peak"
+          ? "Peak Time"
+          : "Explore";
 
   return <Workspace key={initialTab} {...data} initialTab={initialTab} />;
 }

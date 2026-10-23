@@ -64,7 +64,7 @@ export function InventoryPlanner({
                   .includes(query.toLowerCase()),
             )
             .map((i) => (
-              <option key={i.sku} value={i.sku}>
+              <option key={`${i.sku}:${i.shelfId}`} value={i.sku}>
                 {catalog?.products.find((p) => p.sku === i.sku)?.nameTh} ·{" "}
                 {i.sku} · {i.shelfId}
               </option>
@@ -115,14 +115,19 @@ export function InventoryPlanner({
             </dd>
           </dl>
           <p className="form-hint">
-            Actual mock · คลังรวมจากสถานที่จัดเก็บระดับ SKU ครั้งเดียว ·
+            {dataset.source === "Imported" ? "IMPORTED DATA" : "Actual mock"} ·
+            คลังรวมจากสถานที่จัดเก็บระดับ SKU ครั้งเดียว ·
             ไม่รวมของจองในสต็อกพร้อมใช้
           </p>
         </section>
       )}
       <p className="data-period">
-        Stock snapshot · {dataset.asOf} · Shelf {item.onHand} / Backroom{" "}
-        {item.backroomOnHand ?? "No Data"} {product?.unit ?? "ชิ้น"}
+        Stock snapshot ·{" "}
+        {catalog?.shelfInventory
+          .find((r) => r.sku === item.sku)
+          ?.updatedAt.slice(0, 10) ?? dataset.asOf}{" "}
+        · Shelf {item.onHand} / Backroom {item.backroomOnHand ?? "No Data"}{" "}
+        {product?.unit ?? "ชิ้น"}
       </p>
       <CalculatorForm
         key={item.sku}

@@ -5,6 +5,7 @@ import "./globals.css";
 import "./workspace.css";
 import "./spatial.css";
 import "./enhancement.css";
+import "./data-management.css";
 const kanit = Kanit({
   subsets: ["thai", "latin"],
   weight: ["300", "400", "500", "600", "700"],

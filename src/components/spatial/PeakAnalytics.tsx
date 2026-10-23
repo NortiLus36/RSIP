@@ -42,7 +42,9 @@ export function HourChart({
     metric === "sales"
       ? "บาท/ชั่วโมง"
       : metric === "entries"
-        ? "ผู้เข้าร้าน/ชั่วโมง"
+        ? data.source === "IMPORTED DATA"
+          ? "การผ่านโซน/ชั่วโมง (อาจนับคนซ้ำ)"
+          : "ผู้เข้าร้าน/ชั่วโมง"
         : "คน ณ snapshot";
   const select = useSpatial((s) => s.setTime);
   const current = rows.find((r) => r.hour === selectedHour)?.[metric];
@@ -158,7 +160,7 @@ export function PeakAnalytics({
   }));
   return (
     <section className="peak-analytics">
-      <span className="eyebrow">SPATIAL INTELLIGENCE · DEMO DATA</span>
+      <span className="eyebrow">SPATIAL INTELLIGENCE · {data.source}</span>
       <h1>Peak Time Analytics</h1>
       <p>
         {date} · {timeLabel(hour)}–{timeLabel(hour + 1)} · Asia/Bangkok ·
@@ -166,21 +168,35 @@ export function PeakAnalytics({
       </p>
       <div className="peak-kpis">
         <article>
-          <span>Daily peak · ผู้เข้าร้าน</span>
+          <span>
+            Daily peak ·{" "}
+            {data.source === "IMPORTED DATA" ? "การผ่านโซน" : "ผู้เข้าร้าน"}
+          </span>
           <b>{peak === null ? "No Data" : timeLabel(peak)}</b>
           <small>สูงสุดจาก Dataset · เสมอกันเลือกชั่วโมงแรก</small>
         </article>
         <article>
-          <span>ลูกค้าเข้าร้านช่วงที่เลือก</span>
+          <span>
+            {data.source === "IMPORTED DATA"
+              ? "การผ่านโซนช่วงที่เลือก"
+              : "ลูกค้าเข้าร้านช่วงที่เลือก"}
+          </span>
           <b>{num(selected?.entries ?? null, "คน")}</b>
-          <small>ผู้เข้าร้าน ไม่บวกจำนวนคนผ่านหลายโซน</small>
+          <small>
+            {data.source === "IMPORTED DATA"
+              ? "รวมการผ่านโซน อาจนับคนเดิมซ้ำ ไม่ใช่ลูกค้าไม่ซ้ำ"
+              : "ผู้เข้าร้าน ไม่บวกจำนวนคนผ่านหลายโซน"}
+          </small>
         </article>
         <article>
           <span>ยอดขายรายชั่วโมง</span>
           <b>{num(selected?.sales ?? null, "บาท")}</b>
         </article>
         <article>
-          <span>จำนวนธุรกรรม</span>
+          <span>
+            จำนวนธุรกรรม
+            {data.source === "IMPORTED DATA" ? " (รวมรายโซน อาจซ้ำตะกร้า)" : ""}
+          </span>
           <b>{num(selected?.transactions ?? null, "รายการ")}</b>
         </article>
       </div>
@@ -188,13 +204,19 @@ export function PeakAnalytics({
         <article className="chart-card">
           <h3>
             <KPIFieldHeader
-              label="จำนวนลูกค้าเข้าร้านรายชั่วโมง"
+              label={
+                data.source === "IMPORTED DATA"
+                  ? "การผ่านโซนรายชั่วโมง"
+                  : "จำนวนลูกค้าเข้าร้านรายชั่วโมง"
+              }
               topic="trend"
             />
           </h3>
           <p>
-            ผู้เข้าร้านต่อชั่วโมง · เส้นเหลือง = ช่วงสูงสุดของวัน · เส้นเขียว =
-            ช่วงที่เลือก
+            {data.source === "IMPORTED DATA"
+              ? "การผ่านโซน (นับซ้ำได้)"
+              : "ผู้เข้าร้านต่อชั่วโมง"}{" "}
+            · เส้นเหลือง = ช่วงสูงสุดของวัน · เส้นเขียว = ช่วงที่เลือก
           </p>
           <HourChart data={data} date={date} selectedHour={hour} />
         </article>

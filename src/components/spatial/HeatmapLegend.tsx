@@ -57,7 +57,7 @@ export function HeatmapLegend({
       {open && (
         <>
           <p>
-            {date} · {timeLabel(hour)} · DEMO
+            {date} · {timeLabel(hour)} · {data.source}
           </p>
           <small>{config.unit}</small>
           {layer === "density" && (

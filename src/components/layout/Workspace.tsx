@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Box, PanelLeftClose, PanelLeftOpen, FlaskConical } from "lucide-react";
@@ -15,11 +15,57 @@ import { Timeline } from "@/components/spatial/Timeline";
 import { HeatmapLegend } from "@/components/spatial/HeatmapLegend";
 import { PeakAnalytics } from "@/components/spatial/PeakAnalytics";
 import { ActionPlanning } from "@/components/analytics/ActionPlanning";
-export function Workspace({
+import { useDataSource } from "@/stores/data-source";
+import {
+  DemoDataProvider,
+  ImportedDataProvider,
+  importCoverage,
+} from "@/lib/import/provider";
+import { DataManagement } from "@/components/data/DataManagement";
+export function Workspace(
+  props: DashboardData & { operationsPage?: boolean; initialTab?: string },
+) {
+  const { operationsPage = false, initialTab = "Explore" } = props;
+  const demo = useMemo<DashboardData>(() => ({ ...props }), [props]);
+  const { source, bundle, revision, hydrate } = useDataSource();
+  useEffect(() => {
+    void hydrate(demo);
+  }, [hydrate, demo]);
+  const active = useMemo(
+    () =>
+      source === "demo"
+        ? new DemoDataProvider(demo).getDashboard()
+        : new ImportedDataProvider(demo, bundle).getDashboard(),
+    [source, bundle, demo],
+  );
+  useEffect(() => {
+    useExplorer.getState().select(null, false);
+    useSpatial.getState().configure(active.spatial.dates, active.spatial.hours);
+  }, [revision, active.spatial]);
+  return (
+    <WorkspaceBody
+      {...active}
+      operationsPage={operationsPage}
+      initialTab={initialTab}
+      demoData={demo}
+      revision={revision}
+    />
+  );
+}
+import { useSpatial } from "@/stores/spatial";
+function WorkspaceBody({
   operationsPage = false,
   initialTab = "Explore",
+  demoData,
+  revision,
   ...data
-}: DashboardData & { operationsPage?: boolean; initialTab?: string }) {
+}: DashboardData & {
+  operationsPage?: boolean;
+  initialTab?: string;
+  demoData: DashboardData;
+  revision: number;
+}) {
+  const { source, bundle, hydrated, error } = useDataSource();
   const router = useRouter();
   const [sidebar, setSidebar] = useState(!operationsPage);
   const [tab, setTab] = useState(initialTab);
@@ -50,7 +96,7 @@ export function Workspace({
           {data.store.name}
         </div>
         <nav aria-label="Main navigation">
-          {["Explore", "Peak Time", "Analytics"].map((t) => (
+          {["Explore", "Peak Time", "Analytics", "Data Management"].map((t) => (
             <button
               key={t}
               className={!operationsPage && tab === t ? "active" : ""}
@@ -62,7 +108,7 @@ export function Workspace({
                   router.push(
                     t === "Explore"
                       ? "/"
-                      : `/?view=${t === "Analytics" ? "analytics" : "peak"}`,
+                      : `/?view=${t === "Analytics" ? "analytics" : t === "Data Management" ? "data" : "peak"}`,
                   );
                 } else setTab(t);
               }}
@@ -81,7 +127,7 @@ export function Workspace({
         <div className="nav-end">
           <span className="demo-badge">
             <FlaskConical size={12} />
-            DEMO
+            {source === "demo" ? "DEMO DATA" : "IMPORTED DATA"}
           </span>
           <span className="avatar">RV</span>
         </div>
@@ -90,11 +136,45 @@ export function Workspace({
         {sidebar && <StoreExplorer store={data.store} catalog={data.catalog} />}
         <section className="main-area">
           <div
+            className="data-source-status"
+            aria-label="Dataset source and coverage"
+          >
+            {!hydrated
+              ? "กำลังโหลดข้อมูล Browser…"
+              : source === "demo"
+                ? "DEMO DATA · ข้อมูลจำลองเดิม"
+                : `IMPORTED DATA · Sales ${bundle.sales ? data.dataset.asOf : "No Data"} · สต็อก ${
+                    bundle.inventory?.rows
+                      .map((r) => String(r.snapshotDate))
+                      .sort()
+                      .at(-1) ?? "No Data"
+                  } · ประเภทที่ไม่ได้นำเข้า = No Data`}
+            {source === "imported" && (
+              <details>
+                <summary>Data Coverage / Last Imported</summary>
+                {importCoverage(bundle).map((c) => (
+                  <p key={c.kind}>
+                    {c.kind}: {c.rows} แถว · {c.from}–{c.to} · Last Imported{" "}
+                    {new Date(c.importedAt).toLocaleString("th-TH")}
+                  </p>
+                ))}
+                <p>
+                  Traffic = การผ่านโซน อาจนับคนซ้ำ · Occupancy = คน ณ snapshot ·
+                  Stock เป็นฐานรายวัน ไม่ใช่การเคลื่อนไหวรายชั่วโมง · Sales
+                  ไม่มี Fixture จึงไม่เดายอดขายต่อชั้น
+                </p>
+              </details>
+            )}
+            {error && <span role="alert">{error}</span>}
+          </div>
+          <div
             className={`scene-card ${selected ? (drawerCollapsed ? "drawer-is-collapsed" : "drawer-is-open") : ""}`}
           >
             {operationsPage ? (
               <div className="analytics-overlay operations-page">
-                <span className="eyebrow">OPERATIONS · DEMO</span>
+                <span className="eyebrow">
+                  OPERATIONS · {source === "demo" ? "DEMO" : "IMPORTED DATA"}
+                </span>
                 <ActionPlanning
                   store={data.store}
                   initialActions={data.dataset.actions}
@@ -146,10 +226,15 @@ export function Workspace({
                     >
                       ← Explore
                     </button>
-                    {tab === "Peak Time" ? (
+                    {tab === "Data Management" ? (
+                      <DataManagement demo={demoData} data={data} />
+                    ) : tab === "Peak Time" ? (
                       <PeakAnalytics data={data.spatial} store={data.store} />
                     ) : (
-                      <AnalyticsWorkspace key={tab} data={data} />
+                      <AnalyticsWorkspace
+                        key={`${tab}:${revision}`}
+                        data={data}
+                      />
                     )}
                   </div>
                 )}
@@ -165,8 +250,10 @@ export function Workspace({
             />
           )}
           <div className="workspace-disclosure">
-            ข้อมูลสังเคราะห์ทั้งหมด · ไม่ใช่ระบบหรือข้อมูลจริงของ Lotus&apos;s ·
-            แปลนโดยประมาณ
+            {source === "demo"
+              ? "ข้อมูลสังเคราะห์ทั้งหมด"
+              : "ข้อมูลนำเข้าเก็บเฉพาะ Browser นี้"}{" "}
+            · ไม่ใช่ระบบหรือข้อมูลจริงของ Lotus&apos;s · แปลนโดยประมาณ
           </div>
         </section>
       </div>

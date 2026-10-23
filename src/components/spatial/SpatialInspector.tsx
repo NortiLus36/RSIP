@@ -29,7 +29,7 @@ export function SpatialInspector({
   return (
     <section className="spatial-inspector">
       <span className="eyebrow">
-        SELECTED HOUR · {layer.toUpperCase()} · DEMO
+        SELECTED HOUR · {layer.toUpperCase()} · {data.source}
       </span>
       <p>
         {date} · {timeLabel(hour)}–{timeLabel(hour + 1)} UTC+7

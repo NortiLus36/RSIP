@@ -1,0 +1,2 @@
+sku,fixtureId,shelfStock,backroomStock,reservedStock,incomingStock,safetyStock,averageDailyDemand,leadTimeDays,snapshotDate
+G002,missing-fixture,-1,100,0,0,10,5,3,2026-10-23

@@ -70,10 +70,12 @@ export function trendChart(
   const rows = rowsFor(data, filter);
   const dates = [...new Set(data.sales.map((r) => r.date))].sort();
   if (weekly)
-    return [dates.slice(0, 7), dates.slice(7)].map((group) => ({
-      name: `${group[0].slice(5)}–${group.at(-1)!.slice(5)}`,
-      sales: salesTotals(rows.filter((r) => group.includes(r.date))).sales,
-    }));
+    return [dates.slice(0, 7), dates.slice(7)]
+      .filter((group) => group.length)
+      .map((group) => ({
+        name: `${group[0].slice(5)}–${group.at(-1)!.slice(5)}`,
+        sales: salesTotals(rows.filter((r) => group.includes(r.date))).sales,
+      }));
   return dates.map((date) => ({
     name: date.slice(5),
     sales: salesTotals(rows.filter((r) => r.date === date)).sales,
@@ -142,23 +144,25 @@ export function snapshotFor(
       ]
     : [];
   if (id === store.id) {
-    const today = data.storeDays.find((d) => d.date === data.asOf)!;
-    metrics.push(
-      ...metric(
-        "traffic",
-        "ลูกค้าเข้าร้าน",
-        today.traffic,
-        "people",
-        "จำนวนผู้เข้าร้านรายวัน",
-      ),
-      ...metric(
-        "csat",
-        "ความพึงพอใจ",
-        csat(today.satisfied, today.responses),
-        "%",
-        "คำตอบพึงพอใจ / คำตอบทั้งหมด × 100",
-      ),
-    );
+    const today = data.storeDays.find((d) => d.date === data.asOf);
+    if (today) {
+      metrics.push(
+        ...metric(
+          "traffic",
+          "ลูกค้าเข้าร้าน",
+          today.traffic,
+          "people",
+          "จำนวนผู้เข้าร้านรายวัน",
+        ),
+        ...metric(
+          "csat",
+          "ความพึงพอใจ",
+          csat(today.satisfied, today.responses),
+          "%",
+          "คำตอบพึงพอใจ / คำตอบทั้งหมด × 100",
+        ),
+      );
+    }
   }
   const checkout = data.checkout.filter(
     (r) =>
@@ -182,7 +186,7 @@ export function snapshotFor(
       from: `${data.asOf}T00:00:00+07:00`,
       to: `${data.asOf}T23:00:00+07:00`,
     },
-    source: "Mock",
+    source: data.source,
     metrics,
   };
 }

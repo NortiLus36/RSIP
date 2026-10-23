@@ -39,7 +39,13 @@ Connect the GitHub repository to Pages with these settings:
 
 No environment variables are required. The Pages URL uses HTTPS. Operations edits remain temporary browser state; this deployment does not add persistent storage. If a build says `Output directory "out" not found`, check both the selected branch and that the static-export commit is present before retrying.
 
-## Product and inventory integration
+## Data Management extension
+
+Open **Data Management** (`/?view=data`) to import CSV UTF-8/BOM or XLSX for products, inventory, sales, hourly zone traffic and aggregate customer experience. Map columns → validate → preview → explicitly confirm replacement. Downloads include CSV samples, data dictionaries and the real floor-plan IDs. Dataset Manager provides three validated scenarios, source switching, Reset Demo and Clear Imported Data.
+
+Files are parsed locally and stored in IndexedDB in this browser only. All views use the active provider. Missing imported measurements remain No Data; no demo measurements are silently mixed in. Limits: 5 MB, 10,000 rows, 64 columns and 31-day coverage per file. See [implementation, validation rules, test evidence and limitations](docs/data-import.md).
+
+## Product and inventory integration details
 
 The explorer uses shared Font Awesome category icons and an expandable hierarchy:
 

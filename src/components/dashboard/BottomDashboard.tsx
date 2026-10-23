@@ -39,7 +39,8 @@ export function BottomDashboard({
             </span>
           )}
           <small>
-            DEMO · {formatPeriod(snapshot.period)} · OOS = stock snapshot
+            {snapshot.source === "Imported" ? "IMPORTED DATA" : "DEMO"} ·{" "}
+            {formatPeriod(snapshot.period)} · OOS = stock snapshot
           </small>
         </div>
         <button

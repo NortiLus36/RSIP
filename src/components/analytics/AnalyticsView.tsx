@@ -141,8 +141,9 @@ export function AnalyticsView({
         )}
       </div>
       <p className="data-period">
-        DEMO · THB · {weekly ? shiftDate(dataset.asOf, -6) : dataset.asOf} –{" "}
-        {dataset.asOf} · {rows.length} แถวข้อมูล
+        {dataset.source === "Imported" ? "IMPORTED DATA" : "DEMO"} · THB ·{" "}
+        {weekly ? shiftDate(dataset.asOf, -6) : dataset.asOf} – {dataset.asOf} ·{" "}
+        {rows.length} แถวข้อมูล
       </p>
       <div className="analytics-stats">
         <KPIStatCard

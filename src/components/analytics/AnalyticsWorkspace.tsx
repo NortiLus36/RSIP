@@ -7,6 +7,7 @@ import { CalculatorForm } from "./CalculatorForm";
 import { AnalyticsView } from "./AnalyticsView";
 import { InventoryPlanner } from "./InventoryPlanner";
 import { DataExploration } from "./DataExploration";
+import { ImportedExperience } from "@/components/data/ImportedExperience";
 const modules = [
   ["dashboard", "Dashboard & Charts"],
   ["retail", "Retail KPI"],
@@ -21,10 +22,17 @@ export function AnalyticsWorkspace({ data }: { data: DashboardData }) {
   return (
     <div className="analytics-workspace">
       <header>
-        <div className="eyebrow">RETAIL INTELLIGENCE · DEMO</div>
+        <div className="eyebrow">
+          RETAIL INTELLIGENCE ·{" "}
+          {data.dataset.source === "Imported" ? "IMPORTED DATA" : "DEMO"}
+        </div>
         <h1>
           Analytics Studio{" "}
-          <small>ข้อมูลสังเคราะห์ · ไม่ใช่ผลการดำเนินงานจริง</small>
+          <small>
+            {data.dataset.source === "Imported"
+              ? "ข้อมูลนำเข้าของ Browser นี้"
+              : "ข้อมูลสังเคราะห์ · ไม่ใช่ผลการดำเนินงานจริง"}
+          </small>
         </h1>
       </header>
       <nav className="module-nav" aria-label="Analytics modules">
@@ -39,7 +47,17 @@ export function AnalyticsWorkspace({ data }: { data: DashboardData }) {
         ))}
       </nav>
       <div className="module-content">
-        {module === "dashboard" ? (
+        {data.dataset.source === "Imported" && module === "experience" ? (
+          <ImportedExperience />
+        ) : data.dataset.source === "Imported" &&
+          ["retail", "operations", "scenario"].includes(module) ? (
+          <p className="empty-state">
+            No Data · Dataset นำเข้ายังไม่มีข้อมูลผู้เข้าร้านไม่ซ้ำ เวลารอ
+            ค่าแรง Waste หรือแคมเปญ จึงไม่เติมค่า Demo ในเครื่องคิดเลขนี้ ใช้
+            Dashboard / Inventory Planning / Customer Experience
+            เพื่อดูผลจากข้อมูลนำเข้า
+          </p>
+        ) : module === "dashboard" ? (
           <AnalyticsView dataset={data.dataset} store={data.store} />
         ) : module === "exploration" ? (
           <DataExploration dataset={data.dataset} store={data.store} />

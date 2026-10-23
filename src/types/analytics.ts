@@ -52,7 +52,7 @@ export interface ManagementAction {
   critical: "none" | "safety" | "legal";
 }
 export interface RetailDataset {
-  source: "Mock";
+  source: "Mock" | "Imported";
   asOf: string;
   currency: "THB";
   sales: SalesRecord[];

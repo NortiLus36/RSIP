@@ -78,7 +78,7 @@ export interface KpiMetric {
 export interface KpiSnapshot {
   objectId: string;
   period: { from: string; to: string };
-  source: "Mock";
+  source: "Mock" | "Imported";
   metrics: KpiMetric[];
 }
 export interface HourlyTraffic {

@@ -65,11 +65,12 @@ function InspectorBody({
   const parent = zone ?? store.zones.find((z) => z.id === fixture?.zoneId);
   if (!object) return null;
   const fixtureSnapshot = data.objectSnapshots.find(
-    (s) => s.objectId === selected,
+    (s) => s.objectId === (selectedSku ? parent?.id : selected),
   );
-  const totals = selectedSku
-    ? salesTotals(currentRows(dataset, { sku: selectedSku }))
-    : null;
+  const skuSales = selectedSku
+    ? currentRows(dataset, { sku: selectedSku })
+    : [];
+  const totals = selectedSku && skuSales.length ? salesTotals(skuSales) : null;
   const skuStock = data.catalog.shelfInventory
     .filter((r) => r.sku === selectedSku)
     .reduce((s, r) => s + r.shelfStock, 0);
@@ -131,7 +132,10 @@ function InspectorBody({
     >
       <header className="drawer-header">
         <div>
-          <span className="eyebrow">OBJECT INSPECTOR · DEMO</span>
+          <span className="eyebrow">
+            OBJECT INSPECTOR ·{" "}
+            {data.dataset.source === "Imported" ? "IMPORTED DATA" : "DEMO"}
+          </span>
           <h2>
             {data.catalog.products.find((p) => p.sku === selectedSku)?.nameTh ??
               object.name}

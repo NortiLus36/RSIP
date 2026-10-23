@@ -86,8 +86,10 @@ export function hourlySeries(
       hour,
       name: `${String(hour).padStart(2, "0")}:00`,
       entries:
-        data.storeHours.find((r) => r.date === date && r.hour === hour)
-          ?.entries ?? null,
+        zoneId && data.source === "IMPORTED DATA"
+          ? (rows[0]?.customerCount ?? null)
+          : (data.storeHours.find((r) => r.date === date && r.hour === hour)
+              ?.entries ?? null),
       occupancy: sumKnown("occupancy"),
       sales: salesCents === null ? null : salesCents / 100,
       transactions: rows.length

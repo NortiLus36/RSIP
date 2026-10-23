@@ -6,6 +6,7 @@ export interface ZoneHour {
   occupancy: number | null;
   salesCents: number | null;
   transactions: number;
+  customerCount?: number;
 }
 export interface StockHour {
   date: string;
@@ -16,7 +17,7 @@ export interface StockHour {
   oos: number;
 }
 export interface SpatialDataset {
-  source: "DEMO DATA";
+  source: "DEMO DATA" | "IMPORTED DATA";
   timezone: "Asia/Bangkok";
   dates: string[];
   hours: number[];

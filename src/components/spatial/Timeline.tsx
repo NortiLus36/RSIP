@@ -70,7 +70,7 @@ export function Timeline({ data }: { data: SpatialDataset }) {
       <div className="timeline-body" inert={collapsed} aria-hidden={collapsed}>
         <div className="timeline-controls">
           <span className="timeline-title">
-            TIME EXPLORER <small>DEMO DATA · Asia/Bangkok</small>
+            TIME EXPLORER <small>{data.source} · Asia/Bangkok</small>
           </span>
           <label>
             วันที่
@@ -123,7 +123,7 @@ export function Timeline({ data }: { data: SpatialDataset }) {
           </span>
         </div>
         <div className="timeline-track">
-          <span>08:00</span>
+          <span>{timeLabel(data.hours[0])}</span>
           <input
             aria-label="Selected hour"
             type="range"
@@ -134,16 +134,18 @@ export function Timeline({ data }: { data: SpatialDataset }) {
             aria-valuetext={`${date} ${timeLabel(hour)} Asia/Bangkok`}
             style={
               {
-                "--timeline-progress": `${((hour - data.hours[0]) / (data.hours.at(-1)! - data.hours[0])) * 100}%`,
+                "--timeline-progress": `${data.hours.length > 1 ? ((hour - data.hours[0]) / (data.hours.at(-1)! - data.hours[0])) * 100 : 0}%`,
               } as CSSProperties
             }
             onChange={(e) => change(date, Number(e.target.value))}
           />
-          <span>22:00</span>
+          <span>{timeLabel(data.hours.at(-1)!)}</span>
         </div>
         <div className="hourly-summary" aria-label="Selected hour store KPIs">
           <span>
-            ผู้เข้าร้าน{" "}
+            {data.source === "IMPORTED DATA"
+              ? "การผ่านโซน (อาจนับคนซ้ำ)"
+              : "ผู้เข้าร้าน"}{" "}
             <b data-hour-kpi="entries">{num(row?.entries ?? null, "คน/ชม.")}</b>
           </span>
           <span>
@@ -164,8 +166,9 @@ export function Timeline({ data }: { data: SpatialDataset }) {
         <p className="timeline-note">
           {activeDataLayer === "normal" &&
             "Normal ไม่แสดง Heatmap · เปิด Customer Density เพื่อดูสีเปลี่ยนตามเวลา · "}
-          หยุดที่ 22:00 · Occupancy แต่ละโซนเป็น snapshot พร้อมกัน
-          ไม่ใช่จำนวนคนผ่านทั้งชั่วโมง · KPI แถบ Store Performance เป็นฐานรายวัน
+          หยุดที่ {timeLabel(data.hours.at(-1)!)} · Occupancy แต่ละโซนเป็น
+          snapshot พร้อมกัน ไม่ใช่จำนวนคนผ่านทั้งชั่วโมง · KPI แถบ Store
+          Performance เป็นฐานรายวัน
         </p>
       </div>
     </section>

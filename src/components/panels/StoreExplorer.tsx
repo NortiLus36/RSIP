@@ -11,6 +11,7 @@ import { ZoneIcon } from "@/components/shared/ZoneIcon";
 import type { Store } from "@/types";
 import type { ProductCatalog } from "@/types/catalog";
 import { useExplorer } from "@/stores/explorer";
+import { useDataSource } from "@/stores/data-source";
 export function StoreExplorer({
   store,
   catalog,
@@ -19,6 +20,7 @@ export function StoreExplorer({
   catalog: ProductCatalog;
 }) {
   const [query, setQuery] = useState("");
+  const source = useDataSource((s) => s.source);
   const [zonesOpen, setZonesOpen] = useState(true),
     [supportOpen, setSupportOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -119,6 +121,12 @@ export function StoreExplorer({
                         placement && selectSku(p.sku, placement.fixtureId)
                       }
                       aria-pressed={selectedSku === p.sku}
+                      disabled={!placement}
+                      title={
+                        !placement
+                          ? "ยังไม่มี Inventory เชื่อมสินค้านี้กับชั้นวาง โปรดนำเข้า Inventory ก่อน"
+                          : undefined
+                      }
                     >
                       <span className="sku-tree-number" aria-hidden="true">
                         {index + 1}.
@@ -224,8 +232,14 @@ export function StoreExplorer({
       <div className="sidebar-bottom">
         <Warehouse size={18} />
         <div>
-          <strong>Demo environment</strong>
-          <small>ข้อมูลสังเคราะห์สำหรับ Portfolio</small>
+          <strong>
+            {source === "demo" ? "Demo environment" : "Imported environment"}
+          </strong>
+          <small>
+            {source === "demo"
+              ? "ข้อมูลสังเคราะห์สำหรับ Portfolio"
+              : "ข้อมูลนำเข้าเฉพาะ Browser นี้"}
+          </small>
         </div>
         <span className="status-dot" />
       </div>

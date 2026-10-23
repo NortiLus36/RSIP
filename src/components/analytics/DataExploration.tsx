@@ -35,7 +35,10 @@ export function DataExploration({
     <section>
       <div className="section-title">
         <h2>Data Exploration</h2>
-        <span className="demo-badge">DEMO · Pivot-like</span>
+        <span className="demo-badge">
+          {dataset.source === "Imported" ? "IMPORTED DATA" : "DEMO"} ·
+          Pivot-like
+        </span>
       </div>
       <div className="analytics-filters">
         <label>
