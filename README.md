@@ -18,16 +18,32 @@ Open [the development app](http://localhost:3000). `package.json` is inside the 
 
 ```powershell
 npm run build
-npm run start -- --port 3004
+npm run start -- --listen 3004
 ```
 
 WebGL is required for the model; a fallback keeps the explorer and data accessible when WebGL is unavailable. No API keys, database, environment files or backend are needed. Kanit is downloaded from Google Fonts during the first build, then served locally. Both build modes use Next's supported webpack option after a Turbopack worker issue on this Windows environment. Restricted Windows sandboxes can block worker output directories or local sockets: build and preview from a normal project terminal. Stop the preview process before rebuilding its output.
 
+## Cloudflare Pages
+
+`npm run build` exports the complete demo into `out/`; no Node server is needed in production. Home query links (`/?view=analytics` and `/?view=peak`) are resolved in the browser, and the Operations route is exported with its own directory/index.html so direct visits and refreshes work.
+
+Connect the GitHub repository to Pages with these settings:
+
+| Setting | Value |
+| --- | --- |
+| Production branch | `feature/phase5-product-inventory` |
+| Framework preset | Next.js (Static HTML Export), or None |
+| Build command | `npm run build` |
+| Build output directory | `out` |
+| Root directory | Empty (repository root) |
+
+No environment variables are required. The Pages URL uses HTTPS. Operations edits remain temporary browser state; this deployment does not add persistent storage. If a build says `Output directory "out" not found`, check both the selected branch and that the static-export commit is present before retrying.
+
 ## Product and inventory integration
 
-The explorer uses meaningful Lucide icons and an expandable hierarchy:
+The explorer uses shared Font Awesome category icons and an expandable hierarchy:
 
-**Zone → Subcategory → Fixture → Product / SKU**
+**Category → Subcategory → Product**
 
 There are 12 retail departments, 44 subcategories and 52 unique active SKUs. Grocery has six subcategories and ten SKUs, including jasmine rice, white rice, instant noodles, cooking oils and seasoning. Backroom F stores these same merchandise SKUs by warehouse location. Checkout L connects to six POS transaction records; neither operational zone invents products to sell.
 

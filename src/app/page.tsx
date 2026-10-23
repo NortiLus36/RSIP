@@ -1,21 +1,11 @@
+import { Suspense } from "react";
 import { loadDashboard } from "@/data/providers";
-import { Workspace } from "@/components/layout/Workspace";
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ view?: string }>;
-}) {
-  const { view } = await searchParams;
+import { HomeWorkspace } from "@/components/layout/HomeWorkspace";
+export default async function Home() {
+  const data = await loadDashboard();
   return (
-    <Workspace
-      {...await loadDashboard()}
-      initialTab={
-        view === "analytics"
-          ? "Analytics"
-          : view === "peak"
-            ? "Peak Time"
-            : "Explore"
-      }
-    />
+    <Suspense fallback={<p role="status">กำลังเตรียมข้อมูลร้าน...</p>}>
+      <HomeWorkspace {...data} />
+    </Suspense>
   );
 }
