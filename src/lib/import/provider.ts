@@ -399,14 +399,30 @@ export function importCoverage(bundle: ImportBundle) {
     from:
       d!.rows
         .map((r) =>
-          String(r.snapshotDate ?? r.date ?? r.transactionDateTime ?? ""),
+          String(
+            r.snapshotDate ??
+              r.date ??
+              r.transactionDateTime ??
+              r.dateTime ??
+              r.eta ??
+              r.startDate ??
+              "",
+          ),
         )
         .filter(Boolean)
         .sort()[0] ?? "—",
     to:
       d!.rows
         .map((r) =>
-          String(r.snapshotDate ?? r.date ?? r.transactionDateTime ?? ""),
+          String(
+            r.snapshotDate ??
+              r.date ??
+              r.transactionDateTime ??
+              r.dateTime ??
+              r.eta ??
+              r.endDate ??
+              "",
+          ),
         )
         .filter(Boolean)
         .sort()

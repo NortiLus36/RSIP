@@ -92,13 +92,38 @@ export function hourlySeries(
               ?.entries ?? null),
       occupancy: sumKnown("occupancy"),
       sales: salesCents === null ? null : salesCents / 100,
-      transactions: rows.length
-        ? rows.reduce((s, r) => s + r.transactions, 0)
-        : null,
+      transactions:
+        data.source !== "FORECAST" && rows.length
+          ? rows.reduce((s, r) => s + r.transactions, 0)
+          : null,
     };
   });
 }
 export function peakHour(data: SpatialDataset, date: string) {
+  if (data.source === "FORECAST") {
+    const known = data.hours
+      .map((hour) => {
+        const rows = data.zones.filter(
+          (r) => r.date === date && r.hour === hour && r.occupancy !== null,
+        );
+        return {
+          hour,
+          occupancy: rows.length
+            ? rows.reduce((s, r) => s + r.occupancy!, 0)
+            : null,
+        };
+      })
+      .filter((r) => r.occupancy !== null);
+    return known.length
+      ? known.reduce((a, b) =>
+          b.occupancy! > a.occupancy! ||
+          (b.occupancy === a.occupancy && b.hour < a.hour)
+            ? b
+            : a,
+        ).hour
+      : null;
+  }
+
   const rows = data.storeHours.filter(
     (r) => r.date === date && Number.isFinite(r.entries),
   );

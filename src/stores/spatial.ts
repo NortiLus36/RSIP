@@ -2,6 +2,8 @@ import { create } from "zustand";
 import type { DataLayer } from "@/types/spatial";
 import { spatialDates, spatialHours } from "@/config/heatmap";
 interface SpatialState {
+  mode: "Historical" | "Forecast";
+  setMode: (mode: "Historical" | "Forecast") => void;
   activeDataLayer: DataLayer;
   selectedDate: string;
   selectedHour: number;
@@ -16,6 +18,8 @@ interface SpatialState {
   setSpeed: (speed: 1 | 2 | 5) => void;
 }
 export const useSpatial = create<SpatialState>((set, get) => ({
+  mode: "Historical",
+  setMode: (mode) => set({ mode, playing: false }),
   dates: spatialDates,
   hours: spatialHours,
   configure: (dates, hours) =>
@@ -24,12 +28,14 @@ export const useSpatial = create<SpatialState>((set, get) => ({
       hours,
       selectedDate: dates.includes(s.selectedDate)
         ? s.selectedDate
-        : dates.at(-1)!,
+        : s.mode === "Forecast"
+          ? dates[0]
+          : dates.at(-1)!,
       selectedHour: hours.includes(s.selectedHour) ? s.selectedHour : hours[0],
       playing: false,
     })),
   activeDataLayer: "normal",
-  selectedDate: "2026-10-22",
+  selectedDate: "2026-10-23",
   selectedHour: 18,
   playing: false,
   speed: 1,

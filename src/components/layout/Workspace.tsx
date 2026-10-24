@@ -14,7 +14,11 @@ import { AnalyticsWorkspace } from "@/components/analytics/AnalyticsWorkspace";
 import { Timeline } from "@/components/spatial/Timeline";
 import { HeatmapLegend } from "@/components/spatial/HeatmapLegend";
 import { PeakAnalytics } from "@/components/spatial/PeakAnalytics";
-import { ActionPlanning } from "@/components/analytics/ActionPlanning";
+import { StaffHub } from "@/components/analytics/StaffHub";
+import { useIntelligence } from "@/stores/intelligence";
+import { useForecast } from "@/components/analytics/useForecast";
+import { applyApprovedReports } from "@/lib/analytics/operations";
+import { forecastSpatial } from "@/lib/analytics/workforce";
 import { useDataSource } from "@/stores/data-source";
 import {
   DemoDataProvider,
@@ -31,20 +35,42 @@ export function Workspace(
   useEffect(() => {
     void hydrate(demo);
   }, [hydrate, demo]);
-  const active = useMemo(
+  const base = useMemo(
     () =>
       source === "demo"
         ? new DemoDataProvider(demo).getDashboard()
         : new ImportedDataProvider(demo, bundle).getDashboard(),
     [source, bundle, demo],
   );
+  const workflow = useIntelligence();
+  const hydrateWorkflow = workflow.hydrate;
+  const mode = useSpatial((s) => s.mode);
   useEffect(() => {
-    useExplorer.getState().select(null, false);
+    void hydrateWorkflow();
+  }, [hydrateWorkflow]);
+  const updated = useMemo(
+    () =>
+      applyApprovedReports(
+        base,
+        workflow.reports,
+        workflow.reportResetAt[
+          base.dataset.intelligence?.reference ?? "legacy"
+        ],
+      ),
+    [base, workflow.reports, workflow.reportResetAt],
+  );
+  const forecast = useForecast(updated);
+  const active = useMemo(() => {
+    if (mode !== "Forecast" || forecast.error) return updated;
+    return { ...updated, spatial: forecastSpatial(updated, forecast.options) };
+  }, [updated, mode, forecast.error, forecast.options]);
+  useEffect(() => {
     useSpatial.getState().configure(active.spatial.dates, active.spatial.hours);
   }, [revision, active.spatial]);
   return (
     <WorkspaceBody
       {...active}
+      historicalSpatial={updated.spatial}
       operationsPage={operationsPage}
       initialTab={initialTab}
       demoData={demo}
@@ -58,16 +84,20 @@ function WorkspaceBody({
   initialTab = "Explore",
   demoData,
   revision,
+  historicalSpatial,
   ...data
 }: DashboardData & {
   operationsPage?: boolean;
   initialTab?: string;
   demoData: DashboardData;
   revision: number;
+  historicalSpatial: DashboardData["spatial"];
 }) {
   const { source, bundle, hydrated, error } = useDataSource();
   const router = useRouter();
-  const [sidebar, setSidebar] = useState(!operationsPage);
+  const [sidebar, setSidebar] = useState(
+    !operationsPage && initialTab === "Explore",
+  );
   const [tab, setTab] = useState(initialTab);
   const [expanded, setExpanded] = useState(false);
   const [drawerCollapsed, setDrawerCollapsed] = useState(false);
@@ -142,7 +172,8 @@ function WorkspaceBody({
             {!hydrated
               ? "กำลังโหลดข้อมูล Browser…"
               : source === "demo"
-                ? "DEMO DATA · ข้อมูลจำลองเดิม"
+                ? (data.dataset.intelligence?.sourceLabel ??
+                  "SYNTHETIC DEMO DATA")
                 : `IMPORTED DATA · Sales ${bundle.sales ? data.dataset.asOf : "No Data"} · สต็อก ${
                     bundle.inventory?.rows
                       .map((r) => String(r.snapshotDate))
@@ -175,10 +206,7 @@ function WorkspaceBody({
                 <span className="eyebrow">
                   OPERATIONS · {source === "demo" ? "DEMO" : "IMPORTED DATA"}
                 </span>
-                <ActionPlanning
-                  store={data.store}
-                  initialActions={data.dataset.actions}
-                />
+                <StaffHub data={data} />
               </div>
             ) : (
               <>
@@ -218,7 +246,10 @@ function WorkspaceBody({
                   onCollapse={() => setDrawerCollapsed(!drawerCollapsed)}
                 />
                 {tab !== "Explore" && (
-                  <div className="analytics-overlay">
+                  <div
+                    key={tab}
+                    className={`analytics-overlay ${tab === "Data Management" ? "data-page" : ""}`}
+                  >
                     <button
                       className="analytics-back"
                       aria-label="Return to Explore"
@@ -233,7 +264,8 @@ function WorkspaceBody({
                     ) : (
                       <AnalyticsWorkspace
                         key={`${tab}:${revision}`}
-                        data={data}
+                        data={{ ...data, spatial: historicalSpatial }}
+                        onExplore={() => setTab("Explore")}
                       />
                     )}
                   </div>

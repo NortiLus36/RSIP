@@ -170,7 +170,11 @@ export function PeakAnalytics({
         <article>
           <span>
             Daily peak ·{" "}
-            {data.source === "IMPORTED DATA" ? "การผ่านโซน" : "ผู้เข้าร้าน"}
+            {data.source === "FORECAST"
+              ? "Forecast occupancy"
+              : data.source === "IMPORTED DATA"
+                ? "การผ่านโซน"
+                : "ผู้เข้าร้าน"}
           </span>
           <b>{peak === null ? "No Data" : timeLabel(peak)}</b>
           <small>สูงสุดจาก Dataset · เสมอกันเลือกชั่วโมงแรก</small>

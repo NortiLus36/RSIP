@@ -36,10 +36,11 @@ export function forecastSpatial(
             ? skus.reduce((s, sku) => s + eventFactor(calendar, d, sku), 0) /
               skus.length
             : 1;
-        const base = rows.length
-          ? rows.reduce((s, r) => s + r.occupancy! / factor(r.date), 0) /
-            rows.length
-          : null;
+        const base =
+          rows.length >= 2
+            ? rows.reduce((s, r) => s + r.occupancy! / factor(r.date), 0) /
+              rows.length
+            : null;
         const scenario =
           options.scenario === "Conservative"
             ? 0.85
@@ -51,7 +52,36 @@ export function forecastSpatial(
           hour,
           zoneId: zone.id,
           occupancy:
-            base === null ? null : Math.round(base * factor(date) * scenario),
+            base === null
+              ? null
+              : Math.round(
+                  base *
+                    (skus.length
+                      ? skus.reduce(
+                          (sum, sku) =>
+                            sum +
+                            eventFactor(calendar, date, sku, "preparation") *
+                              (options.festivalPct
+                                ? 1 + options.festivalPct / 100
+                                : eventFactor(
+                                    calendar,
+                                    date,
+                                    sku,
+                                    "festival",
+                                  )) *
+                              (options.promotionPct
+                                ? 1 + options.promotionPct / 100
+                                : eventFactor(
+                                    calendar,
+                                    date,
+                                    sku,
+                                    "promotion",
+                                  )),
+                          0,
+                        ) / skus.length
+                      : 1) *
+                    scenario,
+                ),
           salesCents: null,
           transactions: 0,
         };

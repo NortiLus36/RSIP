@@ -143,13 +143,24 @@ export function comparePeriod(
 ) {
   const count = Math.round((Date.parse(to) - Date.parse(from)) / 86400000) + 1;
   if (count < 1 || count > 366) throw new Error("ช่วงเปรียบเทียบ 1–366 วัน");
+  const categorySkus = new Set(
+    data.catalog.products
+      .filter(
+        (p) =>
+          p.categoryId === categoryId ||
+          data.catalog.categories.some(
+            (c) => c.id === p.categoryId && c.parentId === categoryId,
+          ),
+      )
+      .map((p) => p.sku),
+  );
   const filter = (a: string, b: string) =>
     data.dataset.sales.filter(
       (r) =>
         r.date >= a &&
         r.date <= b &&
         (!zoneId || r.zoneId === zoneId) &&
-        (!categoryId || r.categoryId === categoryId),
+        (!categoryId || r.categoryId === categoryId || categorySkus.has(r.sku)),
     );
   const priorTo = dateAdd(previousFrom, count - 1),
     current = filter(from, to),
@@ -282,6 +293,7 @@ export function inventoryRecommendation(
     protection,
     coverageDays,
     inTime,
+    eligibleHorizon,
     capacity,
     replenishment,
     suggestedOrder,
@@ -413,9 +425,31 @@ export function forecastVariance(
     const actual = data.dataset.sales.filter(
       (r) => r.sku === f.sku && r.date === f.date,
     );
-    const covered = data.dataset.sales.some((r) => r.date === f.date);
+    const covered =
+      actual.length > 0 && data.catalog.products.some((p) => p.sku === f.sku);
+    const inventoryRows =
+      data.dataset.intelligence?.inventory.filter(
+        (r) => r.sku === f.sku && r.snapshotDate === f.date,
+      ) ?? [];
+    const warehouses = new Map(
+      inventoryRows.map((r) => [
+        String(r.storageLocationId),
+        Number(r.backroomStock) - Number(r.reservedStock),
+      ]),
+    );
+    const waste =
+      data.dataset.intelligence?.waste.filter(
+        (r) => r.sku === f.sku && r.date === f.date,
+      ) ?? [];
     return {
       ...f,
+      stockSnapshot: inventoryRows.length
+        ? inventoryRows.reduce((s, r) => s + Number(r.shelfStock), 0) +
+          [...warehouses.values()].reduce((s, n) => s + n, 0)
+        : null,
+      wasteQuantity: waste.length
+        ? waste.reduce((s, r) => s + Number(r.quantity), 0)
+        : null,
       actualQuantity:
         covered && actual.every((r) => r.quantity !== undefined)
           ? actual.reduce((s, r) => s + (r.quantity ?? 0), 0)

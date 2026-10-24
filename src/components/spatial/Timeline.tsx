@@ -69,6 +69,21 @@ export function Timeline({ data }: { data: SpatialDataset }) {
       </div>
       <div className="timeline-body" inert={collapsed} aria-hidden={collapsed}>
         <div className="timeline-controls">
+          <label>
+            โหมด
+            <select
+              aria-label="Timeline mode"
+              value={useSpatial.getState().mode}
+              onChange={(e) =>
+                useSpatial
+                  .getState()
+                  .setMode(e.target.value as "Historical" | "Forecast")
+              }
+            >
+              <option>Historical</option>
+              <option>Forecast</option>
+            </select>
+          </label>
           <span className="timeline-title">
             TIME EXPLORER <small>{data.source} · Asia/Bangkok</small>
           </span>
@@ -119,7 +134,8 @@ export function Timeline({ data }: { data: SpatialDataset }) {
             {timeLabel(hour)}–{timeLabel(hour + 1)}
           </strong>
           <span className="peak-badge">
-            Peak {peak === null ? "No Data" : timeLabel(peak)}
+            Peak {data.source === "FORECAST" ? "occupancy " : ""}
+            {peak === null ? "No Data" : timeLabel(peak)}
           </span>
         </div>
         <div className="timeline-track">

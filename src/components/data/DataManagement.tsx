@@ -17,6 +17,8 @@ import {
 } from "@/lib/import/templates";
 import { importCoverage, experienceTotals } from "@/lib/import/provider";
 import { inventoryForSku } from "@/lib/analytics/catalog";
+import { useIntelligence } from "@/stores/intelligence";
+import { useSpatial } from "@/stores/spatial";
 import { useDataSource } from "@/stores/data-source";
 
 const tabs = [
@@ -55,6 +57,28 @@ export function DataManagement({
     [confirmed, setConfirmed] = useState(false),
     [clearConfirmed, setClearConfirmed] = useState(false);
   const state = useDataSource();
+  async function restoreDemo(clear = false) {
+    try {
+      const w = useIntelligence.getState(),
+        ref = demo.dataset.intelligence?.reference ?? "legacy";
+      const nextOptions = { ...w.options };
+      delete nextOptions[ref];
+      await w.save({
+        reportResetAt: { ...w.reportResetAt, [ref]: new Date().toISOString() },
+        options: nextOptions,
+      });
+      await state.save("demo", clear ? {} : state.bundle);
+      useSpatial.getState().setMode("Historical");
+      setClearConfirmed(false);
+      reset();
+      setNotice(
+        "กลับข้อมูลจำลอง 1–23 ต.ค. แล้ว · เก็บ Forecast/Reports แต่ไม่นำรายงานก่อน Reset มาปรับสต็อกซ้ำ",
+      );
+    } catch (e) {
+      setError(String(e));
+    }
+  }
+
   const result = useMemo(
     () =>
       table
@@ -136,7 +160,9 @@ export function DataManagement({
       }
       await state.save("imported", bundle);
       reset();
-      setNotice(`โหลด Scenario ${name} แล้ว (แทนที่ข้อมูลนำเข้าทั้ง 5 ประเภท)`);
+      setNotice(
+        `โหลด Scenario ${name} แล้ว (แทนที่ข้อมูลนำเข้าทุกประเภทใน Scenario)`,
+      );
     } catch (e) {
       setError(String(e));
     }
@@ -426,11 +452,7 @@ export function DataManagement({
             <button
               aria-label="Reset to Demo Data"
               disabled={busy}
-              onClick={() =>
-                void state
-                  .save("demo", state.bundle)
-                  .catch((e) => setError(String(e)))
-              }
+              onClick={() => void restoreDemo()}
             >
               Reset Demo
             </button>
@@ -517,8 +539,8 @@ export function DataManagement({
             </button>
           </div>
           <p>
-            ข้อมูลจำลองจากแถวข้อมูลจริงของ Scenario ไม่ใช่ KPI สำเร็จรูป ·
-            ไม่ได้ Import Waste Cost จึงไม่แสดง Waste KPI
+            ข้อมูลจำลองจากแถวข้อมูลจริงของ Scenario ไม่ใช่ KPI สำเร็จรูป · Waste
+            ใช้ข้อมูลที่นำเข้าแยกจากยอดขาย ไม่เดามูลค่าความเสียหาย
           </p>
           <label>
             <input
@@ -530,16 +552,7 @@ export function DataManagement({
           </label>
           <button
             disabled={busy || !clearConfirmed}
-            onClick={() =>
-              void state
-                .save("demo", {})
-                .then(() => {
-                  setClearConfirmed(false);
-                  reset();
-                  setNotice("ล้างข้อมูลนำเข้าและกลับ Demo แล้ว");
-                })
-                .catch((e) => setError(String(e)))
-            }
+            onClick={() => void restoreDemo(true)}
           >
             Clear Imported Data
           </button>

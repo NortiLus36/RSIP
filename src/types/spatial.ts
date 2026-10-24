@@ -17,7 +17,7 @@ export interface StockHour {
   oos: number;
 }
 export interface SpatialDataset {
-  source: "DEMO DATA" | "IMPORTED DATA";
+  source: "DEMO DATA" | "IMPORTED DATA" | "FORECAST";
   timezone: "Asia/Bangkok";
   dates: string[];
   hours: number[];

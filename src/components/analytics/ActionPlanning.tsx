@@ -7,11 +7,24 @@ import { prioritizeActions } from "@/lib/analytics/insights";
 export function ActionPlanning({
   store,
   initialActions,
+  controlledActions,
+  onActionsChange,
 }: {
   store: Store;
   initialActions: ManagementAction[];
+  controlledActions?: ManagementAction[];
+  onActionsChange?: (actions: ManagementAction[]) => void;
 }) {
-  const [actions, setActions] = useState(initialActions);
+  const [localActions, setLocalActions] = useState(initialActions);
+  const actions = controlledActions ?? localActions;
+  const setActions = (
+    update:
+      ManagementAction[] | ((a: ManagementAction[]) => ManagementAction[]),
+  ) => {
+    const next = typeof update === "function" ? update(actions) : update;
+    if (onActionsChange) onActionsChange(next);
+    else setLocalActions(next);
+  };
   const [problem, setProblem] = useState("");
   const [owner, setOwner] = useState("");
   const [zone, setZone] = useState(store.zones[0].id);

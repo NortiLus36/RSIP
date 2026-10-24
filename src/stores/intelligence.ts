@@ -15,6 +15,7 @@ export type DemoRole =
   | "Store Staff"
   | "Digital Store Talent";
 interface Payload {
+  reportResetAt: Record<string, string>;
   version: 1;
   role: DemoRole;
   options: Record<string, ForecastOptions>;
@@ -25,6 +26,7 @@ interface Payload {
   actions: Record<string, ManagementAction[]>;
 }
 const empty: Payload = {
+  reportResetAt: {},
   version: 1,
   role: "Store Manager",
   options: {},
@@ -35,6 +37,8 @@ const empty: Payload = {
   actions: {},
 };
 interface IntelligenceState extends Payload {
+  selection: Record<string, string>;
+  selectSku: (ref: string, sku: string) => void;
   ready: boolean;
   busy: boolean;
   error: string;
@@ -45,6 +49,9 @@ interface IntelligenceState extends Payload {
 }
 export const useIntelligence = create<IntelligenceState>((set, get) => ({
   ...empty,
+  selection: {},
+  selectSku: (ref, sku) =>
+    set((s) => ({ selection: { ...s.selection, [ref]: sku } })),
   ready: false,
   busy: false,
   error: "",
@@ -64,7 +71,7 @@ export const useIntelligence = create<IntelligenceState>((set, get) => ({
           !saved.actions
         )
           throw new Error("Workflow ใน Browser ไม่ถูกต้อง");
-        set(saved);
+        set({ ...empty, ...saved });
       }
     } catch (e) {
       set({ error: String(e) });
@@ -79,6 +86,7 @@ export const useIntelligence = create<IntelligenceState>((set, get) => ({
       const s = get(),
         payload: Payload = {
           version: 1,
+          reportResetAt: s.reportResetAt,
           role: s.role,
           options: s.options,
           snapshots: s.snapshots,

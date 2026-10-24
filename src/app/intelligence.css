@@ -1,0 +1,254 @@
+/* Intelligence styles stay scoped to analytics and staff workflows. */
+.intelligence {
+  color: #243c47;
+  min-width: 0;
+  font-size: 13px;
+}
+.intelligence h2 {
+  font-size: 22px;
+  margin: 0 0 16px;
+}
+.intelligence h3 {
+  font-size: 16px;
+  margin: 24px 0 12px;
+}
+.intelligence p {
+  line-height: 1.8;
+  margin: 12px 0;
+  color: #647c86;
+  overflow-wrap: anywhere;
+}
+.intelligence button {
+  padding: 9px 14px;
+  border: 1px solid #cde5e2;
+  border-radius: 7px;
+  color: #007f7a;
+  background: #effaf8;
+  cursor: pointer;
+}
+.intelligence button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.intelligence button:hover:not(:disabled) {
+  background: #d9f3ef;
+}
+.intelligence label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  font-size: 12px;
+}
+.intelligence input:not([type="checkbox"]),
+.intelligence select,
+.intelligence textarea {
+  max-width: 100%;
+  width: 100%;
+  border: 1px solid #d5e6e3;
+  border-radius: 7px;
+  padding: 10px;
+  background: #fbfdfd;
+  color: #243c47;
+  min-width: 0;
+}
+.intelligence input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #00aaa6;
+}
+.intelligence textarea {
+  min-height: 85px;
+}
+.intel-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+  align-items: end;
+}
+.intel-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+.intel-stats article {
+  padding: 20px;
+  border: 1px solid #dce9e7;
+  border-radius: 10px;
+  background: #f6fbfa;
+}
+.intel-stats small {
+  display: block;
+  color: #6b858c;
+}
+.intel-stats strong {
+  display: block;
+  font-size: 24px;
+  margin-top: 12px;
+}
+.intel-table {
+  overflow: auto;
+  max-height: 480px;
+  max-width: 100%;
+  margin: 24px 0;
+  border: 1px solid #dce9e7;
+  border-radius: 8px;
+}
+.intel-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+.intel-table td,
+.intel-table th {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e4eeec;
+}
+.intel-table th {
+  position: sticky;
+  top: 0;
+  background: #edf7f4;
+  z-index: 1;
+}
+.intel-table td {
+  max-width: 320px;
+  white-space: normal;
+  min-width: 95px;
+  overflow-wrap: anywhere;
+}
+.intel-chart {
+  height: 270px;
+  min-width: 0;
+  margin: 24px 0;
+}
+.intel-lesson {
+  padding: 24px;
+  border: 1px solid #dce9e7;
+  border-radius: 10px;
+  margin: 16px 0;
+}
+.intelligence details {
+  margin: 24px 0;
+  border-top: 1px solid #dce9e7;
+  padding-top: 16px;
+}
+.intelligence summary {
+  cursor: pointer;
+  color: #007f7a;
+}
+.staff-hub {
+  max-width: 1400px;
+  margin: auto;
+}
+.staff-hub header {
+  margin-bottom: 24px;
+}
+.staff-hub header label {
+  max-width: 320px;
+}
+.intelligence [role="alert"]:not(:empty) {
+  background: #fff0ed;
+  color: #a2392b;
+  padding: 12px;
+}
+/* Data Management: scoped spacing; the timeline remains a flex sibling outside this scroller. */
+.phase3 .analytics-overlay.data-page {
+  padding: 28px;
+  overflow-x: hidden;
+  scroll-padding-bottom: 32px;
+}
+.data-page .analytics-back {
+  margin: 0 0 16px;
+}
+.data-page .data-management {
+  padding: 0 0 32px;
+  max-width: 1400px;
+  margin: auto;
+  min-width: 0;
+}
+.data-page .data-management section {
+  padding: 24px;
+  margin: 24px 0;
+  min-width: 0;
+  max-width: 100%;
+}
+.data-page .data-management label {
+  margin: 16px 0;
+}
+.data-page .mapping-grid {
+  gap: 16px;
+}
+.data-page .module-nav {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+  padding-bottom: 16px;
+  margin: 24px 0;
+}
+.data-page .module-nav button {
+  flex-shrink: 0;
+}
+.data-page .import-table {
+  max-width: 100%;
+  overflow: auto;
+  margin: 24px 0;
+}
+.data-page .upload-drop {
+  margin: 24px 0;
+  padding: 24px;
+}
+.data-page .import-confirm {
+  padding: 16px;
+  margin: 24px 0;
+  overflow-wrap: anywhere;
+}
+.data-page .template-card {
+  padding: 16px 0;
+  margin-bottom: 24px;
+}
+@media (max-width: 800px) {
+  .phase3 .analytics-overlay.data-page {
+    padding: 16px;
+  }
+  .data-page .data-management section {
+    padding: 16px;
+  }
+  .data-page .upload-drop {
+    padding: 16px;
+  }
+  .intelligence.analytics-workspace {
+    padding: 16px;
+  }
+  .intelligence .module-content {
+    padding: 16px;
+  }
+  .intel-fields {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .intel-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .intel-stats article {
+    padding: 16px;
+  }
+  .intel-stats strong {
+    font-size: 20px;
+  }
+  .operations-page {
+    padding: 16px;
+  }
+  .intel-lesson {
+    padding: 16px;
+  }
+  .phase3 .timeline-body {
+    max-height: 300px;
+  }
+  .phase3 .timeline-collapsed .timeline-body {
+    max-height: 0;
+  }
+}
