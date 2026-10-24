@@ -77,7 +77,7 @@ export class ImportedDataProvider {
       catalog.fixtureProducts.push({
         sku,
         fixtureId,
-        displayCapacity: Number(r.shelfStock),
+        displayCapacity: Number(r.shelfCapacity ?? r.shelfStock),
       });
       catalog.shelfInventory.push({
         sku,
@@ -118,6 +118,9 @@ export class ImportedDataProvider {
       const p = products.find((p) => p.sku === r.sku)!,
         category = catalog.categories.find((c) => c.id === p.categoryId)!;
       return {
+        quantity: Number(r.quantity),
+        transactionId: String(r.transactionId),
+        hour: bangkokTime(String(r.transactionDateTime)).hour,
         date: bangkokTime(String(r.transactionDateTime)).date,
         sku: p.sku,
         fixtureId: "",
@@ -137,9 +140,57 @@ export class ImportedDataProvider {
       inventoryDate ??
       latest(bundle.traffic?.rows ?? [], "date") ??
       demo.dataset.asOf;
+    if (bundle.supply) {
+      catalog.stockLocations.forEach((r) => {
+        r.incomingStock = 0;
+        r.incomingBatches = [];
+      });
+      for (const r of bundle.supply.rows) {
+        let loc = catalog.stockLocations.find(
+          (l) => l.sku === r.sku && l.fixtureId === r.storageLocationId,
+        );
+        if (!loc) {
+          loc = {
+            sku: String(r.sku),
+            fixtureId: String(r.storageLocationId),
+            backroomStock: 0,
+            reservedStock: 0,
+            incomingStock: 0,
+            incomingArrivalDays: 0,
+            updatedAt: asOf,
+            incomingBatches: [],
+          };
+          catalog.stockLocations.push(loc);
+        }
+        const days = Math.max(
+          0,
+          (Date.parse(String(r.eta)) - Date.parse(inventoryDate ?? asOf)) /
+            86400000,
+        );
+        loc.incomingStock += Number(r.quantity);
+        loc.incomingBatches!.push({
+          quantity: Number(r.quantity),
+          arrivalDays: days,
+        });
+        loc.incomingArrivalDays = Math.max(
+          ...loc.incomingBatches!.map((b) => b.arrivalDays),
+        );
+      }
+    }
     const dataset: RetailDataset = {
       ...demo.dataset,
       source: "Imported",
+      intelligence: {
+        reference: bundleReference(bundle),
+        sourceLabel: "IMPORTED DATA",
+        sales: bundle.sales?.rows ?? [],
+        inventory: bundle.inventory?.rows ?? [],
+        calendar: bundle.calendar?.rows ?? [],
+        supply: bundle.supply?.rows ?? [],
+        workforce: bundle.workforce?.rows ?? [],
+        feedback: bundle.feedback?.rows ?? [],
+        waste: bundle.waste?.rows ?? [],
+      },
       asOf,
       sales,
       checkout: [],
@@ -332,6 +383,13 @@ export class ImportedDataProvider {
       ),
     };
   }
+}
+export function bundleReference(bundle: ImportBundle) {
+  let h = 2166136261;
+  const s = JSON.stringify(bundle);
+  for (let i = 0; i < s.length; i++)
+    h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return `import-${(h >>> 0).toString(16)}`;
 }
 export function importCoverage(bundle: ImportBundle) {
   return Object.entries(bundle).map(([kind, d]) => ({

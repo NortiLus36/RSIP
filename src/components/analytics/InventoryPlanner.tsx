@@ -28,7 +28,12 @@ export function InventoryPlanner({
   const arrivals =
     catalog?.stockLocations
       .filter((r) => r.sku === item?.sku)
-      .map((r) => r.incomingArrivalDays) ?? [];
+      .flatMap(
+        (r) =>
+          r.incomingBatches?.map((b) => b.arrivalDays) ?? [
+            r.incomingArrivalDays,
+          ],
+      ) ?? [];
   const sameArrival = new Set(arrivals).size === 1;
   if (!item || !dataset.planning.some((profile) => profile.sku === item.sku))
     return (

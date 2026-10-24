@@ -51,6 +51,7 @@ export function scenarioBundle(
   const inv = sampleRows("inventory", demo).map((r) => ({
     ...r,
     shelfStock: name === "overstock" ? 500 : 0,
+    shelfCapacity: 500,
     backroomStock: 100,
     reservedStock: 0,
     incomingStock: 0,
@@ -100,6 +101,11 @@ export function scenarioBundle(
     ),
   );
   return {
+    supply: wrap("supply", sampleRows("supply", demo)),
+    workforce: wrap("workforce", sampleRows("workforce", demo)),
+    feedback: wrap("feedback", sampleRows("feedback", demo)),
+    calendar: wrap("calendar", sampleRows("calendar", demo)),
+    waste: wrap("waste", sampleRows("waste", demo)),
     product: wrap("product", product),
     inventory: wrap("inventory", inv),
     sales: wrap("sales", sales),

@@ -7,6 +7,11 @@ const f = (
   required = true,
 ): Field => ({ name, type, description, example, required });
 export const datasetLabels: Record<DatasetKind, string> = {
+  supply: "Supply — สินค้ากำลังเข้า",
+  workforce: "Workforce — กำลังคน",
+  feedback: "Feedback — ปัญหาลูกค้า",
+  calendar: "Business Calendar — ปฏิทินธุรกิจ",
+  waste: "Waste — สินค้าสูญเสีย",
   product: "Product Master — สินค้า",
   inventory: "Inventory — สต็อก",
   sales: "Sales — ยอดขาย",
@@ -14,6 +19,77 @@ export const datasetLabels: Record<DatasetKind, string> = {
   experience: "Customer Experience — ความพึงพอใจ",
 };
 export const schemas: Record<DatasetKind, Field[]> = {
+  supply: [
+    f("sku", "text", "SKU ใน Product Master", "G002"),
+    f("storageLocationId", "text", "Fixture คลัง F", "fixture-f-01"),
+    f(
+      "quantity",
+      "number",
+      "จำนวนกำลังเข้า; เมื่อมีไฟล์นี้จะใช้แทนยอด Incoming ใน Inventory",
+      "20",
+    ),
+    f("eta", "date", "วันถึง YYYY-MM-DD", "2026-10-26"),
+  ],
+  workforce: [
+    f("date", "date", "วันที่มีพนักงาน", "2026-10-23"),
+    f("hour", "integer", "ชั่วโมง 0–23", "18"),
+    f("zoneId", "text", "โซนเดิม", "A"),
+    f("staffAvailable", "integer", "พนักงานพร้อมทำงาน", "1"),
+    f("productiveMinutes", "number", "นาทีทำงานจริงต่อคนต่อชั่วโมง 1–60", "45"),
+    f("hourlyCost", "number", "ค่าแรงต่อคนต่อชั่วโมง บาท", "80"),
+    f(
+      "serviceMinutes",
+      "number",
+      "นาทีบริการต่อการผ่านโซน (สมมติฐานที่ต้องตรวจสอบ)",
+      "0.2",
+    ),
+  ],
+  feedback: [
+    f("caseId", "text", "Case ID ไม่ซ้ำ", "CASE001"),
+    f(
+      "dateTime",
+      "datetime",
+      "เวลารายงานพร้อมเขตเวลา",
+      "2026-10-23T12:00:00+07:00",
+    ),
+    f("zoneId", "text", "โซน", "A"),
+    f(
+      "category",
+      "text",
+      "เช่น Shelf OOS / Queue / Price / Service",
+      "Shelf OOS",
+    ),
+    f("severity", "integer", "ระดับ 1–5", "3"),
+    f(
+      "description",
+      "text",
+      "คำอธิบาย ไม่ใส่ข้อมูลส่วนบุคคล",
+      "ไม่พบสินค้าบนชั้น",
+    ),
+    f("status", "text", "Open / In progress / Done", "Open"),
+    f("resolvedAt", "datetime", "เวลาปิดเคส; ต้องมีเมื่อ Done", "", false),
+  ],
+  calendar: [
+    f("eventId", "text", "รหัสเหตุการณ์", "VEG2026"),
+    f("startDate", "date", "วันเริ่ม", "2026-10-10"),
+    f("endDate", "date", "วันจบ", "2026-10-18"),
+    f("name", "text", "ชื่อเหตุการณ์", "กินเจ"),
+    f("kind", "text", "festival / promotion / preparation", "festival"),
+    f("sku", "text", "SKU ที่ได้รับผล; ว่าง = ทุก SKU", "G002", false),
+    f(
+      "upliftPct",
+      "number",
+      "Demand uplift %; ใช้ normalize ประวัติแล้วคูณผลของวันเป้าหมาย",
+      "30",
+    ),
+    f("discountPct", "number", "ส่วนลด % ของโปรโมชั่น", "0", false),
+  ],
+  waste: [
+    f("date", "date", "วันที่สูญเสีย", "2026-10-23"),
+    f("sku", "text", "SKU", "G002"),
+    f("quantity", "number", "หน่วยสูญเสีย", "1"),
+    f("costAmount", "number", "ต้นทุนสูญเสียรวมบาท", "60"),
+  ],
   product: [
     f("sku", "text", "รหัสสินค้าไม่ซ้ำ", "G002"),
     f("productName", "text", "ชื่อสินค้า", "ข้าวทดสอบ 5 กก."),
@@ -43,6 +119,13 @@ export const schemas: Record<DatasetKind, Field[]> = {
       ] as const
     ).map(([n, d, e]) => f(n, "number", d, e)),
     f("snapshotDate", "date", "วันที่สต็อก YYYY-MM-DD", "2026-10-23"),
+    f(
+      "shelfCapacity",
+      "number",
+      "ความจุชั้นต่อ SKU + Fixture; ถ้าไม่ระบุใช้ยอดบนชั้นเป็นขอบเขตที่รู้",
+      "100",
+      false,
+    ),
     f(
       "storageLocationId",
       "text",

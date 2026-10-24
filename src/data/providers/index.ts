@@ -42,7 +42,7 @@ export const retailProvider: RetailDataProvider = {
     return productCatalog;
   },
 };
-export async function loadDashboard() {
+export async function loadLegacyDashboard() {
   const [store, traffic, categories, inventory, dataset, spatial, catalog] =
     await Promise.all([
       retailProvider.getStore(),
@@ -75,4 +75,8 @@ export async function loadDashboard() {
     catalog,
   };
 }
-export type DashboardData = Awaited<ReturnType<typeof loadDashboard>>;
+export type DashboardData = Awaited<ReturnType<typeof loadLegacyDashboard>>;
+export async function loadDashboard(): Promise<DashboardData> {
+  const { octoberDashboard } = await import("@/data/mock/october");
+  return octoberDashboard(await loadLegacyDashboard());
+}

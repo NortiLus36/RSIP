@@ -14,9 +14,18 @@ export function inventoryForSku(catalog: ProductCatalog, sku: string) {
   );
   const incomingStock = locations.reduce((s, r) => s + r.incomingStock, 0);
   const availableStock = shelfStock + backroomStock - reservedStock;
-  const eligibleIncoming = locations
-    .filter((r) => plan && r.incomingArrivalDays <= plan.leadTimeDays)
-    .reduce((s, r) => s + r.incomingStock, 0);
+  const eligibleIncoming = locations.reduce(
+    (s, r) =>
+      s +
+      (r.incomingBatches
+        ? r.incomingBatches
+            .filter((b) => plan && b.arrivalDays <= plan.leadTimeDays)
+            .reduce((a, b) => a + b.quantity, 0)
+        : plan && r.incomingArrivalDays <= plan.leadTimeDays
+          ? r.incomingStock
+          : 0),
+    0,
+  );
   return {
     shelfStock,
     backroomStock,

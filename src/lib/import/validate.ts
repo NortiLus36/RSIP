@@ -151,13 +151,54 @@ export function validateImport(
   rows.forEach((r, i) => {
     const num = i + 2;
     const product = products.find((p) => p.sku === r.sku);
-    if (["inventory", "sales"].includes(kind) && !product)
+    if (["inventory", "sales", "supply", "waste"].includes(kind) && !product)
       add(num, "sku", "SKU ไม่มีใน Product Master ปัจจุบัน");
     if (r.zoneId && !store.zones.some((z) => z.id === r.zoneId))
       add(num, "zoneId", "Zone ID ไม่มีในแผนผัง");
     if (r.storeId && r.storeId !== store.id)
       add(num, "storeId", `รหัสร้านต้องเป็น ${store.id}`);
     let key = "";
+    if (kind === "supply") {
+      key = JSON.stringify([r.sku, r.storageLocationId, r.eta]);
+      if (
+        !store.fixtures.some(
+          (f) => f.id === r.storageLocationId && f.zoneId === "F",
+        )
+      )
+        add(num, "storageLocationId", "ต้องเป็นคลังโซน F");
+    }
+    if (kind === "workforce") {
+      key = JSON.stringify([r.date, r.hour, r.zoneId]);
+      if (Number(r.hour) > 23) add(num, "hour", "ชั่วโมง 0–23");
+      if (Number(r.productiveMinutes) <= 0 || Number(r.productiveMinutes) > 60)
+        add(num, "productiveMinutes", "นาทีทำงานจริงต้องมากกว่า 0 ไม่เกิน 60");
+    }
+    if (kind === "feedback") {
+      key = String(r.caseId);
+      if (!["Open", "In progress", "Done"].includes(String(r.status)))
+        add(num, "status", "ใช้ Open / In progress / Done");
+      if (Number(r.severity) < 1 || Number(r.severity) > 5)
+        add(num, "severity", "Severity 1–5");
+      if (r.status === "Done" && !r.resolvedAt)
+        add(num, "resolvedAt", "Done ต้องมีเวลาปิดเคส");
+      if (
+        r.resolvedAt &&
+        Date.parse(String(r.resolvedAt)) < Date.parse(String(r.dateTime))
+      )
+        add(num, "resolvedAt", "เวลาปิดต้องไม่ก่อนรายงาน");
+    }
+    if (kind === "calendar") {
+      key = JSON.stringify([r.eventId, r.sku ?? ""]);
+      if (String(r.startDate) > String(r.endDate))
+        add(num, "endDate", "วันจบต้องไม่ก่อนเริ่ม");
+      if (!["festival", "promotion", "preparation"].includes(String(r.kind)))
+        add(num, "kind", "festival / promotion / preparation");
+      if (r.sku && !products.some((p) => p.sku === r.sku))
+        add(num, "sku", "SKU ไม่อยู่ใน Product Master");
+      if (Number(r.discountPct ?? 0) > 100 || Number(r.upliftPct) > 1000)
+        add(num, "upliftPct", "Uplift สูงสุด 1000% / Discount สูงสุด 100%");
+    }
+    if (kind === "waste") key = JSON.stringify([r.date, r.sku]);
     if (kind === "product") {
       key = String(r.sku);
       const previous =
@@ -189,6 +230,11 @@ export function validateImport(
           );
     }
     if (kind === "inventory") {
+      if (
+        r.shelfCapacity !== undefined &&
+        Number(r.shelfCapacity) < Number(r.shelfStock)
+      )
+        add(num, "shelfCapacity", "Capacity ต้องไม่น้อยกว่าสต็อกบนชั้น");
       if (
         Number(r.averageDailyDemand) * Number(r.leadTimeDays) +
           Number(r.safetyStock) >
@@ -317,9 +363,9 @@ export function validateImport(
     seen.add(key);
   });
   if (kind === "product")
-    for (const k of ["inventory", "sales"] as const)
+    for (const k of ["inventory", "sales", "supply", "waste", "calendar"] as const)
       bundle[k]?.rows.forEach((r, i) => {
-        if (!rows.some((p) => p.sku === r.sku))
+        if (r.sku && !rows.some((p) => p.sku === r.sku))
           add(
             i + 2,
             `${k}.sku`,

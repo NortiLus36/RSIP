@@ -4,6 +4,11 @@ export const datasetKinds = [
   "sales",
   "traffic",
   "experience",
+  "supply",
+  "workforce",
+  "feedback",
+  "calendar",
+  "waste",
 ] as const;
 export type DatasetKind = (typeof datasetKinds)[number];
 export type DataRow = Record<string, string | number | boolean>;

@@ -1,4 +1,7 @@
 export interface SalesRecord {
+  quantity?: number;
+  transactionId?: string;
+  hour?: number;
   date: string;
   sku: string;
   fixtureId: string;
@@ -52,6 +55,7 @@ export interface ManagementAction {
   critical: "none" | "safety" | "legal";
 }
 export interface RetailDataset {
+  intelligence?: import("./intelligence").IntelligenceData;
   source: "Mock" | "Imported";
   asOf: string;
   currency: "THB";
