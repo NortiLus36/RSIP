@@ -1,4 +1,5 @@
 "use client";
+import { StoreOverview } from "./StoreOverview";
 import { useState } from "react";
 import type { DashboardData } from "@/data/providers";
 import {
@@ -50,7 +51,7 @@ export function AnalyticsWorkspace({
       </nav>
       <div className="module-content">
         {tab === modules[0] ? (
-          <Overview data={data} />
+          <StoreOverview data={data} />
         ) : tab === modules[1] ? (
           <Forecast data={data} />
         ) : tab === modules[2] ? (

@@ -72,7 +72,7 @@ export function DataManagement({
       setClearConfirmed(false);
       reset();
       setNotice(
-        "กลับข้อมูลจำลอง 1–23 ต.ค. แล้ว · เก็บ Forecast/Reports แต่ไม่นำรายงานก่อน Reset มาปรับสต็อกซ้ำ",
+        "กลับข้อมูลจำลอง 1–25 ต.ค. แล้ว · เก็บ Forecast/Reports แต่ไม่นำรายงานก่อน Reset มาปรับสต็อกซ้ำ",
       );
     } catch (e) {
       setError(String(e));

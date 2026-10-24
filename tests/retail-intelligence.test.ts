@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { loadDashboard, loadLegacyDashboard } from "../src/data/providers";
-import { octoberBundle } from "../src/data/mock/october";
-const demoPromise = loadDashboard();
+import { loadLegacyDashboard } from "../src/data/providers";
+import { octoberBundle, octoberDashboard } from "../src/data/mock/october";
+// Keep the original 23-day fixture for historical forecasting regression tests.
+const demoPromise = loadLegacyDashboard().then((d) => octoberDashboard(d, 23));
 test("October foundation covers only completed Oct 1–23 with transaction-derived sales and costs", async () => {
   const d = await demoPromise;
   assert.equal(d.dataset.asOf, "2026-10-23");
@@ -40,7 +41,7 @@ test("event effects are SKU-specific and calendar states verified festival dates
   );
   assert.ok(c.every((r) => String(r.sku).startsWith("VEG-")));
   assert.equal(
-    octoberBundle(await loadLegacyDashboard()).traffic!.rows.length,
+    octoberBundle(await loadLegacyDashboard(), 23).traffic!.rows.length,
     23 * 15 * 14,
   );
 });

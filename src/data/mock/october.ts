@@ -3,7 +3,7 @@ import type { DataRow, ImportBundle, DatasetKind } from "@/lib/import/types";
 import { ImportedDataProvider } from "@/lib/import/provider";
 export const festivalSource =
   "https://www.tatnews.org/2026/10/thailand-celebrates-vegetarian-festival-2026-across-the-country/";
-export function octoberBundle(demo: DashboardData): ImportBundle {
+export function octoberBundle(demo: DashboardData, through = 25): ImportBundle {
   const products: DataRow[] = demo.catalog.products.map((p) => ({
     sku: p.sku,
     productName: p.nameTh,
@@ -75,7 +75,7 @@ export function octoberBundle(demo: DashboardData): ImportBundle {
   const locations = new Map(
     demo.catalog.fixtureProducts.map((p) => [p.sku, p.fixtureId]),
   );
-  for (let day = 1; day <= 23; day++) {
+  for (let day = 1; day <= through; day++) {
     const date = `2026-10-${String(day).padStart(2, "0")}`,
       weekday = new Date(date + "T00:00:00Z").getUTCDay(),
       weekend = weekday === 0 || weekday === 6,
@@ -102,7 +102,9 @@ export function octoberBundle(demo: DashboardData): ImportBundle {
         locations.get(String(p.sku)) ??
         demo.store.fixtures.find((f) => f.zoneId === p.zoneId)!.id;
       const shelf =
-          day === 23 && i % 11 === 0 ? 0 : Math.max(2, demand * 2 - (i % 7)),
+          day === through && i % 11 === 0
+            ? 0
+            : Math.max(2, demand * 2 - (i % 7)),
         backroom = isVeg && day > 18 ? demand * 18 : 40 + demand * 3;
       inventory.push({
         sku: p.sku,
@@ -198,7 +200,7 @@ export function octoberBundle(demo: DashboardData): ImportBundle {
   const wrap = (rows: DataRow[]) => ({
     rows,
     fileName: "SYNTHETIC DEMO DATA · October 2026",
-    importedAt: "2026-10-23T23:59:00+07:00",
+    importedAt: `2026-10-${String(through).padStart(2, "0")}T23:59:00+07:00`,
   });
   const b: ImportBundle = {};
   for (const [kind, rows] of Object.entries({
@@ -213,13 +215,15 @@ export function octoberBundle(demo: DashboardData): ImportBundle {
     b[kind as DatasetKind] = wrap(rows);
   return b;
 }
-export function octoberDashboard(legacy: DashboardData): DashboardData {
-  const b = octoberBundle(legacy),
+export function octoberDashboard(
+  legacy: DashboardData,
+  through = 25,
+): DashboardData {
+  const b = octoberBundle(legacy, through),
     d = new ImportedDataProvider(legacy, b).getDashboard();
   d.dataset.source = "Mock";
-  d.dataset.intelligence!.reference = "october-2026-v2";
-  d.dataset.intelligence!.sourceLabel =
-    "SYNTHETIC DEMO DATA · 1–23 October 2026";
+  d.dataset.intelligence!.reference = `october-2026-v3-${through}`;
+  d.dataset.intelligence!.sourceLabel = `SYNTHETIC DEMO DATA · 1–${through} October 2026${through >= 25 ? " · รวมวันที่ 25 เป็นข้อมูลจำลอง ไม่ใช่ยอดขายจริง" : ""}`;
   d.dataset.actions = legacy.dataset.actions;
   d.spatial.source = "DEMO DATA";
   // Synthetic arrivals are assigned to exactly one first zone, so demo store entries are not duplicated across zones.

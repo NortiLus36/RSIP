@@ -1,12 +1,19 @@
 "use client";
 import { useEffect, useRef, useState, useId } from "react";
 import { createPortal } from "react-dom";
+import type { HelpTopic } from "@/config/kpi-help";
 import { helpFor } from "@/config/kpi-help";
-export function KPIInfoPopover({ topic }: { topic: string }) {
+export function KPIInfoPopover({
+  topic,
+  helpOverride,
+}: {
+  topic: string;
+  helpOverride?: HelpTopic;
+}) {
   const [open, setOpen] = useState(false),
     id = useId();
   const ref = useRef<HTMLElement>(null);
-  const help = helpFor(topic);
+  const help = helpOverride ?? helpFor(topic);
   useEffect(() => {
     if (!open) return;
     const previous = document.activeElement as HTMLElement | null;
@@ -32,6 +39,7 @@ export function KPIInfoPopover({ topic }: { topic: string }) {
         className="info-button"
         aria-label={`ข้อมูล ${help.title}`}
         aria-haspopup="dialog"
+        aria-expanded={open}
         onClick={(e) => {
           e.preventDefault();
           setOpen(true);

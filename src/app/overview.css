@@ -1,0 +1,214 @@
+.store-overview {
+  min-width: 0;
+}
+.store-overview .overview-heading p {
+  margin: 8px 0;
+}
+.store-overview .overview-source {
+  padding: 18px 20px;
+  border: 1px solid #b8e2dc;
+  background: #f1fbf8;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+.store-overview .overview-source button {
+  margin: 4px 8px 4px 0;
+}
+.store-overview .overview-source p {
+  margin: 5px 0;
+  font-size: 12px;
+}
+.store-overview .overview-comparison {
+  border: 1px solid #cfe4e1;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 24px 0;
+  background: #fbfdfd;
+}
+.store-overview .overview-comparison h3 {
+  margin: 0 0 16px;
+}
+.store-overview .overview-periods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.store-overview .overview-periods > div {
+  border-left: 4px solid #02aba4;
+  padding-left: 16px;
+  min-width: 0;
+}
+.store-overview .overview-periods > div + div {
+  border-color: #94a3b8;
+}
+.store-overview .overview-key {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.store-overview .overview-key.current {
+  background: #02aba4;
+}
+.store-overview .overview-key.previous {
+  background: #94a3b8;
+}
+.store-overview .overview-warning {
+  padding: 12px 16px;
+  background: #fff7da;
+  color: #745300;
+  border-radius: 7px;
+}
+.store-overview .overview-kpis {
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+}
+.store-overview .overview-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #465f67;
+}
+.store-overview .overview-label > span {
+  min-width: 0;
+}
+.store-overview .overview-label > .info-button {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  padding: 0;
+  margin: 0;
+  border-radius: 50%;
+  border: 1px solid #78cfc5;
+  background: #e6f7f2;
+  color: #007f77;
+  font-size: 12px;
+  line-height: 1;
+}
+.store-overview .overview-kpis article {
+  min-width: 0;
+}
+.store-overview .overview-kpis strong small {
+  display: inline;
+  font-size: 11px;
+  font-weight: 400;
+}
+.store-overview .overview-kpis article p {
+  font-size: 10px;
+  margin: 6px 0 0;
+}
+.store-overview .overview-chart-card {
+  padding: 24px;
+  border: 1px solid #dce9e7;
+  border-radius: 12px;
+  margin: 24px 0;
+  min-width: 0;
+}
+.store-overview .overview-chart {
+  height: 310px;
+  width: 100%;
+  min-width: 0;
+  margin: 20px 0;
+}
+.store-overview .overview-lower {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+}
+.store-overview .overview-lower > section {
+  margin: 0;
+}
+.store-overview .overview-peak {
+  font-size: 28px;
+  color: #007f77;
+}
+.overview-tooltip {
+  background: white;
+  padding: 14px;
+  border: 1px solid #bcdcd5;
+  box-shadow: 0 6px 24px #20443b20;
+  border-radius: 9px;
+  max-width: 350px;
+  font-size: 12px;
+  color: #243c47;
+}
+.overview-tooltip > div + div {
+  border-top: 1px solid #dce9e7;
+  padding-top: 12px;
+  margin-top: 12px;
+}
+.overview-tooltip p {
+  margin: 4px 0;
+}
+.store-overview .recharts-legend-wrapper {
+  font-size: 11px;
+}
+.store-overview .intel-table td small {
+  display: block;
+  color: #947100;
+}
+@media (max-width: 800px) {
+  .store-overview .overview-periods,
+  .store-overview .overview-lower {
+    grid-template-columns: 1fr;
+  }
+  .store-overview .overview-comparison,
+  .store-overview .overview-chart-card {
+    padding: 16px;
+  }
+  .store-overview .overview-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .store-overview .overview-kpis article {
+    padding: 12px;
+  }
+  .store-overview .overview-kpis strong {
+    font-size: 20px;
+  }
+  .store-overview .overview-label {
+    font-size: 11px;
+  }
+  .store-overview .overview-source {
+    padding: 16px;
+  }
+  .store-overview .overview-source button {
+    width: 100%;
+    margin: 6px 0;
+  }
+  .store-overview .overview-periods p {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (min-width: 801px) {
+  .store-overview .overview-source {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 18px;
+    padding: 14px 18px;
+  }
+  .store-overview .overview-source > p:first-child {
+    flex: 1;
+    min-width: 280px;
+  }
+  .store-overview .overview-source > p:nth-last-child(2) {
+    flex-basis: 100%;
+    font-size: 11px;
+    margin: 0;
+  }
+  .store-overview .overview-source > div {
+    flex-shrink: 0;
+  }
+  .store-overview .overview-source > span:empty {
+    display: none;
+  }
+  .store-overview .overview-heading h2 {
+    margin-bottom: 0;
+  }
+}
