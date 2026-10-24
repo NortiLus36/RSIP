@@ -23,7 +23,8 @@ import { monday } from "@/lib/analytics/intelligence";
 import { useDataSource } from "@/stores/data-source";
 import { KPIInfoPopover } from "./KPIInfoPopover";
 import type { HelpTopic } from "@/config/kpi-help";
-import { display, Table } from "./IntelligenceUI";
+import { metricValue } from "@/lib/analytics/metric-help";
+import { display, money, Table } from "./IntelligenceUI";
 const help = (
   title: string,
   formula: string,
@@ -147,8 +148,8 @@ function SalesTooltip({
               {String(title)} · {fullDate(String(date))}
             </strong>
             {festival && <p>{String(festival)}</p>}
-            <p>Net Sales: {display(s?.sales)} THB</p>
-            <p>Gross Profit: {display(s?.grossProfit)} THB</p>
+            <p>Net Sales: {metricValue("Sales THB", s?.sales)} THB</p>
+            <p>Gross Profit: {metricValue("GP THB", s?.grossProfit)} THB</p>
             <p>Transactions: {display(s?.transactions)}</p>
           </div>
         ) : null;
@@ -306,6 +307,13 @@ export function StoreOverview({ data }: { data: DashboardData }) {
         <p>สลับแหล่งข้อมูลทั้งระบบ ไม่ลบหรือเขียนทับไฟล์นำเข้าที่บันทึกไว้</p>
         <span role="status">{notice}</span>
       </div>
+      <p>
+        Active Filters: {f.zone || "All Zones"} ·{" "}
+        {f.category || "All Categories"}
+      </p>
+      <button onClick={() => setF({ ...f, zone: "", category: "", target: 0 })}>
+        Reset Filters
+      </button>
       <div className="intel-fields overview-filters">
         <label>
           ช่วงเวลา
@@ -459,7 +467,7 @@ export function StoreOverview({ data }: { data: DashboardData }) {
                   Data Coverage: {m.coverage}/{m.expected} วัน
                 </p>
                 <b>
-                  Current Sales: {display(m.coverage ? m.current.sales : null)}{" "}
+                  Current Sales: {money(m.coverage ? m.current.sales : null)}{" "}
                   THB
                 </b>
               </div>
@@ -472,7 +480,7 @@ export function StoreOverview({ data }: { data: DashboardData }) {
                 </p>
                 <b>
                   Previous Sales:{" "}
-                  {display(m.previousCoverage ? m.previous.sales : null)} THB
+                  {money(m.previousCoverage ? m.previous.sales : null)} THB
                 </b>
               </div>
             </div>
@@ -492,10 +500,10 @@ export function StoreOverview({ data }: { data: DashboardData }) {
                 Matched Days: {m.matched}/{m.expected}
               </strong>{" "}
               · Current Matched Sales{" "}
-              {display(m.matched ? m.matchedCurrent : null)} / Previous Matched
-              Sales {display(m.matched ? m.matchedPrevious : null)} THB ·
-              Difference {display(m.difference)} THB · Growth{" "}
-              {display(m.growth)}%
+              {money(m.matched ? m.matchedCurrent : null)} / Previous Matched
+              Sales {money(m.matched ? m.matchedPrevious : null)} THB ·
+              Difference {money(m.difference)} THB · Growth{" "}
+              {metricValue("%", m.growth)}
             </p>
             {m.partial && (
               <p className="overview-warning">
@@ -544,7 +552,16 @@ export function StoreOverview({ data }: { data: DashboardData }) {
               <article key={topic}>
                 <OverviewLabel title={title} topic={topic} />
                 <strong>
-                  {display(value)} <small>{value === null ? "" : unit}</small>
+                  {unit === "THB" ? (
+                    metricValue("THB", value)
+                  ) : unit === "%" ? (
+                    metricValue("%", value)
+                  ) : (
+                    <>
+                      {display(value)}{" "}
+                      <small>{value === null ? "" : unit}</small>
+                    </>
+                  )}
                 </strong>
                 {topic === "oos" && (
                   <p>
@@ -579,7 +596,7 @@ export function StoreOverview({ data }: { data: DashboardData }) {
                     {fullDate(r.date)}
                     {r.festival && <small> · {r.festival}</small>}
                   </td>
-                  <td>{display(r.actual)}</td>
+                  <td>{metricValue("Sales THB", r.actual)}</td>
                   <td>
                     {r.previousDate
                       ? fullDate(r.previousDate)
@@ -588,7 +605,7 @@ export function StoreOverview({ data }: { data: DashboardData }) {
                       <small> · {r.previousFestival}</small>
                     )}
                   </td>
-                  <td>{display(r.previous)}</td>
+                  <td>{metricValue("Sales THB", r.previous)}</td>
                 </tr>
               ))}
             </Table>
@@ -635,12 +652,12 @@ export function StoreOverview({ data }: { data: DashboardData }) {
               <OverviewLabel title="Peak Sales Day" topic="peak" />
               <p>{m.peak ? fullDate(m.peak.date) : "No Data"}</p>
               <strong className="overview-peak">
-                {display(m.peak?.actual)} THB
+                {metricValue("Sales THB", m.peak?.actual)} THB
               </strong>
               {f.mode === "Festival" && (
                 <>
                   <h3>Festival vs Normal</h3>
-                  <p>Matched Sales Difference: {display(m.difference)} THB</p>
+                  <p>Matched Sales Difference: {money(m.difference)} THB</p>
                   <p>
                     Gross Margin Difference: {display(m.marginDifference)}{" "}
                     percentage points
@@ -649,7 +666,7 @@ export function StoreOverview({ data }: { data: DashboardData }) {
                   <ol>
                     {m.categories.slice(0, 5).map((c) => (
                       <li key={c.id}>
-                        {c.name}: {display(c.sales)} THB
+                        {c.name}: {money(c.sales)} THB
                       </li>
                     ))}
                   </ol>

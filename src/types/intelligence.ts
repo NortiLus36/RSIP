@@ -35,6 +35,8 @@ export interface ForecastRow {
   assumption: string;
 }
 export interface ForecastSnapshot {
+  selectedSku?: string;
+  selectedCategory?: string;
   id: string;
   createdAt: string;
   reference: string;
@@ -44,6 +46,7 @@ export interface ForecastSnapshot {
   backtest: boolean;
 }
 export interface StaffTask {
+  laborCost?: number;
   id: string;
   actionId: string;
   reference: string;
@@ -58,6 +61,7 @@ export interface StaffTask {
   reason: string;
 }
 export interface QuickReport {
+  taskId?: string;
   id: string;
   reference: string;
   createdAt: string;
@@ -73,6 +77,7 @@ export interface QuickReport {
   resolutionAt?: string;
 }
 export interface StaffFeedback {
+  reference?: string;
   id: string;
   createdAt: string;
   category: string;

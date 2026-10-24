@@ -49,7 +49,9 @@ export const useDataSource = create<DataState>((set, get) => ({
           throw new Error("ข้อมูลบันทึกคนละเวอร์ชัน ใช้ Demo แทน");
         for (const [kind, d] of Object.entries(saved.bundle)) {
           if (!d?.rows?.length) throw new Error("ข้อมูลใน Browser ไม่ถูกต้อง");
-          const headers = Object.keys(d.rows[0]);
+          // Optional columns may occur only in later rows (e.g. resolvedAt).
+          // Preserve their union when revalidating persisted normalized records.
+          const headers = [...new Set(d.rows.flatMap((r) => Object.keys(r)))];
           const table = tableFromRows([
             headers,
             ...d.rows.map((r) => headers.map((h) => r[h])),

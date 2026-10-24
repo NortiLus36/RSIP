@@ -73,6 +73,9 @@ export function applyApprovedReports(
     );
   if (!chosen.length) return base;
   const catalog = structuredClone(base.catalog);
+  const intelligence = base.dataset.intelligence
+    ? structuredClone(base.dataset.intelligence)
+    : undefined;
   const accepted: QuickReport[] = [];
   for (const r of chosen) {
     const pos = catalog.shelfInventory.find(
@@ -93,6 +96,47 @@ export function applyApprovedReports(
       const take = Math.min(transfer, loc.backroomStock - loc.reservedStock);
       loc.backroomStock -= take;
       transfer -= take;
+      if (take) loc.updatedAt = r.createdAt;
+    }
+    // Update the active derived snapshot view, never the persisted imported bundle.
+    if (intelligence) {
+      const date = new Date(Date.parse(r.createdAt) + 7 * 3600000)
+        .toISOString()
+        .slice(0, 10);
+      let raw = intelligence.inventory.find(
+        (x) =>
+          x.sku === r.sku &&
+          x.fixtureId === r.fixtureId &&
+          x.snapshotDate === date,
+      );
+      if (!raw) {
+        const template = intelligence.inventory
+          .filter((x) => x.sku === r.sku && x.fixtureId === r.fixtureId)
+          .sort((a, b) =>
+            String(a.snapshotDate).localeCompare(String(b.snapshotDate)),
+          )
+          .at(-1);
+        if (template) {
+          raw = { ...template, snapshotDate: date };
+          intelligence.inventory.push(raw);
+        }
+      }
+      if (raw) {
+        raw.shelfStock = r.count;
+        raw.isClosingSnapshot = false;
+        raw.approvedReportId = r.id;
+      }
+      for (const loc of catalog.stockLocations.filter((l) => l.sku === r.sku)) {
+        for (const row of intelligence.inventory.filter(
+          (x) =>
+            x.sku === r.sku &&
+            x.snapshotDate === date &&
+            x.storageLocationId === loc.fixtureId,
+        )) {
+          row.backroomStock = loc.backroomStock;
+          row.reservedStock = loc.reservedStock;
+        }
+      }
     }
   }
   const inventory = base.inventory.map((i) => ({
@@ -186,6 +230,7 @@ export function applyApprovedReports(
   return {
     ...base,
     catalog,
+    dataset: { ...base.dataset, intelligence },
     inventory,
     spatial,
     snapshot: snapshot(base.snapshot),

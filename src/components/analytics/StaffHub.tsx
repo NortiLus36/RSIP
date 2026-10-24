@@ -48,6 +48,7 @@ export function StaffHub({ data }: { data: DashboardData }) {
     [notice, setNotice] = useState(""),
     [sku, setSku] = useState(data.catalog.products[0]?.sku ?? ""),
     [fixture, setFixture] = useState(""),
+    [taskId, setTaskId] = useState(""),
     [reportTime, setReportTime] = useState(() =>
       new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 16),
     ),
@@ -78,6 +79,7 @@ export function StaffHub({ data }: { data: DashboardData }) {
       const r: QuickReport = {
         id: crypto.randomUUID(),
         reference: ref,
+        taskId: taskId || undefined,
         createdAt: new Date(reportTime + "+07:00").toISOString(),
         zoneId: data.store.fixtures.find((f) => f.id === placement.fixtureId)!
           .zoneId,
@@ -89,6 +91,14 @@ export function StaffHub({ data }: { data: DashboardData }) {
         note: note.trim(),
         status: "Pending",
       };
+      if (
+        taskId &&
+        !s.tasks.some(
+          (t) =>
+            t.id === taskId && t.reference === ref && t.zoneId === r.zoneId,
+        )
+      )
+        throw Error("Task และ SKU ต้องอยู่ Zone เดียวกัน");
       validateQuickReport(data, r);
       await s.save({ reports: [...s.reports, r] });
       setNotice("ส่งรายงานแล้ว รอหัวหน้าอนุมัติก่อนเปลี่ยนสต็อก");
@@ -251,6 +261,26 @@ export function StaffHub({ data }: { data: DashboardData }) {
         <section>
           <h2>Quick Report / Manager Review</h2>
           <label>
+            งาน Workforce ที่รายงาน (ไม่บังคับ)
+            <select value={taskId} onChange={(e) => setTaskId(e.target.value)}>
+              <option value="">ไม่เชื่อมงาน</option>
+              {s.tasks
+                .filter(
+                  (t) =>
+                    t.reference === ref &&
+                    t.zoneId ===
+                      data.store.fixtures.find(
+                        (f) => f.id === placement?.fixtureId,
+                      )?.zoneId,
+                )
+                .map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.date} {t.hour}:00 · {t.zoneId} · {t.priority}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label>
             Report time · Asia/Bangkok
             <input
               type="datetime-local"
@@ -378,6 +408,40 @@ export function StaffHub({ data }: { data: DashboardData }) {
                           disabled={!privileged || s.busy}
                           onClick={() =>
                             persist({
+                              caseStates: {
+                                ...s.caseStates,
+                                [ref]: {
+                                  ...s.caseStates[ref],
+                                  [`report:${r.id}`]: {
+                                    ...s.caseStates[ref]?.[`report:${r.id}`],
+                                    status: "Done",
+                                    resolvedAt: new Date().toISOString(),
+                                  },
+                                },
+                              },
+                              tasks: s.tasks.map((t) =>
+                                t.id === r.taskId && t.reference === ref
+                                  ? { ...t, status: "Done" }
+                                  : t,
+                              ),
+                              actions: {
+                                ...s.actions,
+                                [ref]: (
+                                  s.actions[ref] ?? data.dataset.actions
+                                ).map((a) =>
+                                  a.id ===
+                                    s.caseStates[ref]?.[`report:${r.id}`]
+                                      ?.actionId ||
+                                  s.tasks.some(
+                                    (t) =>
+                                      t.id === r.taskId &&
+                                      t.reference === ref &&
+                                      t.actionId === a.id,
+                                  )
+                                    ? { ...a, status: "Done" }
+                                    : a,
+                                ),
+                              },
                               reports: s.reports.map((x) =>
                                 x.id === r.id
                                   ? {
@@ -449,6 +513,7 @@ export function StaffHub({ data }: { data: DashboardData }) {
                   ...s.feedback,
                   {
                     id: crypto.randomUUID(),
+                    reference: ref,
                     createdAt: new Date().toISOString(),
                     category: "Process / Digital adoption",
                     description: feedback.trim(),
@@ -462,33 +527,35 @@ export function StaffHub({ data }: { data: DashboardData }) {
             ส่ง Feedback
           </button>
           <Table headers={["ข้อความ", "สถานะ"]}>
-            {s.feedback.map((r) => (
-              <tr key={r.id}>
-                <td>{r.description}</td>
-                <td>
-                  <select
-                    disabled={!privileged}
-                    value={r.status}
-                    onChange={(e) =>
-                      void persist({
-                        feedback: s.feedback.map((x) =>
-                          x.id === r.id
-                            ? {
-                                ...x,
-                                status: e.target.value as typeof x.status,
-                              }
-                            : x,
-                        ),
-                      })
-                    }
-                  >
-                    {["Open", "In progress", "Done"].map((v) => (
-                      <option key={v}>{v}</option>
-                    ))}
-                  </select>
-                </td>
-              </tr>
-            ))}
+            {s.feedback
+              .filter((r) => r.reference === ref)
+              .map((r) => (
+                <tr key={r.id}>
+                  <td>{r.description}</td>
+                  <td>
+                    <select
+                      disabled={!privileged}
+                      value={r.status}
+                      onChange={(e) =>
+                        void persist({
+                          feedback: s.feedback.map((x) =>
+                            x.id === r.id
+                              ? {
+                                  ...x,
+                                  status: e.target.value as typeof x.status,
+                                }
+                              : x,
+                          ),
+                        })
+                      }
+                    >
+                      {["Open", "In progress", "Done"].map((v) => (
+                        <option key={v}>{v}</option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              ))}
           </Table>
         </section>
       )}

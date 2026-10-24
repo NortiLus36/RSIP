@@ -53,7 +53,7 @@ export function Timeline({ data }: { data: SpatialDataset }) {
       aria-label="Hourly timeline"
     >
       <div className="timeline-collapsebar">
-        <span>TIME EXPLORER</span>
+        <span>TIME EXPLORER · Selected Timeline Date</span>
         <strong>
           {date} · {timeLabel(hour)} {playing ? "▶" : ""}
         </strong>
@@ -85,7 +85,7 @@ export function Timeline({ data }: { data: SpatialDataset }) {
             </select>
           </label>
           <span className="timeline-title">
-            TIME EXPLORER <small>{data.source} · Asia/Bangkok</small>
+            TIME EXPLORER · Selected Timeline Date <small>{data.source} · Asia/Bangkok</small>
           </span>
           <label>
             วันที่

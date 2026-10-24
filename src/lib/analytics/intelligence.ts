@@ -225,6 +225,22 @@ export function inventoryRecommendation(
     return null;
   if (!Number.isFinite(reviewDays) || reviewDays < 0 || reviewDays > 7)
     throw new Error("Review Days 0–7");
+  const stockDate = data.catalog.shelfInventory
+    .filter((r) => r.sku === sku)
+    .map((r) =>
+      new Date(Date.parse(r.updatedAt) + 7 * 3600000)
+        .toISOString()
+        .slice(0, 10),
+    )
+    .sort()
+    .at(-1)!;
+  // A later stock snapshot cannot serve as historical opening stock.
+  if (stockDate > rows[0].date) return null;
+  const elapsed = Math.max(
+    0,
+    Math.round((Date.parse(rows[0].date) - Date.parse(stockDate)) / 86400000) -
+      1,
+  );
   const horizon = rows.length,
     coverageDays = planning.leadTimeDays + reviewDays;
   const daily = rows.reduce((s, r) => s + r.quantity, 0) / horizon;
@@ -239,9 +255,9 @@ export function inventoryRecommendation(
         s +
         (l.incomingBatches
           ? l.incomingBatches
-              .filter((b) => b.arrivalDays <= coverageDays)
+              .filter((b) => b.arrivalDays <= elapsed + coverageDays)
               .reduce((v, b) => v + b.quantity, 0)
-          : l.incomingArrivalDays <= coverageDays
+          : l.incomingArrivalDays <= elapsed + coverageDays
             ? l.incomingStock
             : 0),
       0,
@@ -253,9 +269,9 @@ export function inventoryRecommendation(
         s +
         (l.incomingBatches
           ? l.incomingBatches
-              .filter((b) => b.arrivalDays <= horizon)
+              .filter((b) => b.arrivalDays <= elapsed + horizon)
               .reduce((v, b) => v + b.quantity, 0)
-          : l.incomingArrivalDays <= horizon
+          : l.incomingArrivalDays <= elapsed + horizon
             ? l.incomingStock
             : 0),
       0,
@@ -292,6 +308,8 @@ export function inventoryRecommendation(
     demand,
     protection,
     coverageDays,
+    stockDate,
+    openingStockAssumption: elapsed > 0,
     inTime,
     eligibleHorizon,
     capacity,
@@ -448,6 +466,17 @@ export function forecastVariance(
     return {
       ...f,
       stockSnapshot,
+      actualGrossProfit: covered ? salesTotals(actual).grossProfit : null,
+      actualMargin:
+        covered && salesTotals(actual).sales
+          ? (salesTotals(actual).grossProfit / salesTotals(actual).sales) * 100
+          : null,
+      variancePct:
+        covered && f.quantity && actual.every((r) => r.quantity !== undefined)
+          ? ((actual.reduce((sum, r) => sum + r.quantity!, 0) - f.quantity) /
+              f.quantity) *
+            100
+          : null,
       closingInventory:
         inventoryRows.length &&
         inventoryRows.every(

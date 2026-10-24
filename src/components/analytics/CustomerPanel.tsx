@@ -2,60 +2,106 @@
 import { useState } from "react";
 import type { DashboardData } from "@/data/providers";
 import { useIntelligence } from "@/stores/intelligence";
-import { display, Stats, Table, Chart } from "./IntelligenceUI";
+import {
+  customerModel,
+  bangkokDay,
+  type CaseState,
+} from "@/lib/analytics/customer";
+import { fullDate } from "@/lib/analytics/overview";
+import { Stats, Table, Chart, MetricLabel } from "./IntelligenceUI";
 export function CustomerPanel({ data }: { data: DashboardData }) {
   const s = useIntelligence(),
-    ref = data.dataset.intelligence?.reference ?? "legacy",
+    ref = data.dataset.intelligence?.reference ?? "legacy";
+  const dates = [
+    ...data.dataset.sales.map((r) => r.date),
+    ...data.dataset.storeDays.map((r) => r.date),
+    ...(data.dataset.intelligence?.feedback ?? []).flatMap((r) =>
+      Number.isFinite(Date.parse(String(r.dateTime)))
+        ? [bangkokDay(String(r.dateTime))]
+        : [],
+    ),
+    ...s.reports
+      .filter(
+        (r) => r.reference === ref && Number.isFinite(Date.parse(r.createdAt)),
+      )
+      .map((r) => bangkokDay(r.createdAt)),
+  ].sort();
+  const [from, setFrom] = useState(dates[0] ?? data.dataset.asOf.slice(0, 10)),
+    [to, setTo] = useState(dates.at(-1) ?? data.dataset.asOf.slice(0, 10)),
+    [zone, setZone] = useState(""),
     [notice, setNotice] = useState("");
-  const reports = s.reports.filter((r) => r.reference === ref),
-    cases = data.dataset.intelligence?.feedback ?? [],
-    days = data.dataset.storeDays;
-  const responses = days.reduce((a, r) => a + r.responses, 0),
-    satisfied = days.reduce((a, r) => a + r.satisfied, 0),
-    transactions = days.reduce((a, r) => a + r.transactions, 0),
-    complaints = days.reduce((a, r) => a + r.complaints, 0);
-  const categories = [
-    ...new Set([
-      ...reports.map((r) => r.category),
-      ...cases.map((r) => String(r.category)),
-    ]),
-  ].map((category) => ({
-    date: category,
-    cases:
-      reports.filter((r) => r.category === category).length +
-      cases.filter((r) => r.category === category).length,
-  }));
-  const resolved = reports.filter((r) => r.resolutionAt),
-    resHours = resolved.length
-      ? resolved.reduce(
-          (a, r) =>
-            a +
-            (Date.parse(r.resolutionAt!) - Date.parse(r.createdAt)) / 3600000,
-          0,
-        ) / resolved.length
-      : null;
-  const action = async (zoneId: string, problem: string) => {
+  const m = customerModel(data, s.reports, s.caseStates, from, to, zone);
+  const update = async (id: string, status: CaseState["status"]) => {
     try {
+      const prior = s.caseStates[ref]?.[id],
+        actionId = prior?.actionId;
       await s.save({
+        reports: s.reports.map((r) =>
+          `report:${r.id}` === id && r.reference === ref
+            ? {
+                ...r,
+                resolutionAt:
+                  status === "Done" ? new Date().toISOString() : undefined,
+              }
+            : r,
+        ),
+        caseStates: {
+          ...s.caseStates,
+          [ref]: {
+            ...s.caseStates[ref],
+            [id]: {
+              ...prior,
+              status,
+              resolvedAt:
+                status === "Done" ? new Date().toISOString() : undefined,
+            },
+          },
+        },
+        actions: {
+          ...s.actions,
+          [ref]: (s.actions[ref] ?? data.dataset.actions).map((a) =>
+            a.id === actionId ? { ...a, status } : a,
+          ),
+        },
+      });
+      setNotice("บันทึกสถานะเคสและ Action แล้ว");
+    } catch (e) {
+      setNotice(String(e));
+    }
+  };
+  const create = async (id: string) => {
+    try {
+      const c = m.cases.find((c) => c.id === id);
+      if (!c) throw Error("No Data");
+      if (c.actionId) throw Error("เคสนี้มี Action แล้ว");
+      const actionId = crypto.randomUUID();
+      await s.save({
+        caseStates: {
+          ...s.caseStates,
+          [ref]: {
+            ...s.caseStates[ref],
+            [id]: { status: c.status, resolvedAt: c.resolvedAt, actionId },
+          },
+        },
         actions: {
           ...s.actions,
           [ref]: [
             ...(s.actions[ref] ?? data.dataset.actions),
             {
-              id: crypto.randomUUID(),
-              zoneId,
-              problem,
+              id: actionId,
+              zoneId: c.zoneId,
+              problem: `${c.id}: ${c.description}`,
               owner: "Department Supervisor",
-              severity: 3,
+              severity: c.severity,
               urgency: 3,
               impact: 3,
-              status: "Open",
+              status: c.status,
               critical: "none",
             },
           ],
         },
       });
-      setNotice("ส่งเข้า Action Planning แล้ว");
+      setNotice("ส่งเข้า Operations / Action Planning แล้ว");
     } catch (e) {
       setNotice(String(e));
     }
@@ -64,89 +110,132 @@ export function CustomerPanel({ data }: { data: DashboardData }) {
     <section>
       <h2>Customer Experience</h2>
       <p>
-        Quick Report และ Feedback ใช้เพื่อปรับปรุงงาน · ไม่เก็บชื่อ เบอร์โทร
-        หรือข้อมูลส่วนบุคคล · Complaint Rate ใช้จำนวนร้องเรียนรวมจาก Experience
-        เท่านั้น ไม่บวก Case ซ้ำ
+        {data.dataset.intelligence?.sourceLabel} · Case-based metrics ·
+        Browser-only persistence ไม่มี Multi-user sync ·
+        ไม่เก็บชื่อหรือข้อมูลติดต่อ
       </p>
+      <div className="intel-fields">
+        <label>
+          เริ่ม Case Range
+          <input
+            type="date"
+            value={from}
+            onInput={(e) => setFrom(e.currentTarget.value)}
+          />
+        </label>
+        <label>
+          สิ้นสุด Case Range
+          <input
+            type="date"
+            value={to}
+            onInput={(e) => setTo(e.currentTarget.value)}
+          />
+        </label>
+        <label>
+          Case Zone
+          <select value={zone} onChange={(e) => setZone(e.target.value)}>
+            <option value="">ทุก Zone</option>
+            {data.store.zones.map((z) => (
+              <option key={z.id} value={z.id}>
+                {z.nameTh}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {from > to && <p role="alert">วันเริ่มต้องไม่อยู่หลังวันสิ้นสุด</p>}
       <Stats
         items={[
-          ["CSAT %", responses ? (satisfied / responses) * 100 : null],
-          ["Responses", responses || null],
-          [
-            "Complaint / 1,000 transactions",
-            transactions ? (complaints / transactions) * 1000 : null,
-          ],
-          ["Quick reports", reports.length],
-          ["Pending", reports.filter((r) => r.status === "Pending").length],
-          ["Resolution mean hours", resHours],
+          ["Complaint Count", m.count],
+          ["Complaint / 1,000 transactions", m.rate],
+          ["Resolved Count", m.resolved],
+          ["Resolution Rate %", m.resolutionRate],
+          ["Resolution mean hours", m.hours],
+          ["CSAT %", m.csat],
+          ["Responses", m.responses],
         ]}
       />
-      <Chart rows={categories} keys={["cases"]} />
-      <p role="status">{notice}</p>
+      <p>
+        ช่วงวันที่รายงาน {from && fullDate(from)} – {to && fullDate(to)} ·
+        ไม่บวกจำนวนร้องเรียนรวมจาก Experience ซ้ำกับเคส · CSAT ใช้ survey
+        ระดับร้านเท่านั้น เลือก Zone = No Data ·
+        ไม่มีข้อมูลร้องเรียนไม่ใช่หลักฐานว่าไม่มีข้อร้องเรียน
+      </p>
+      <h3>
+        <MetricLabel title="Top Complaint Categories" />
+      </h3>
+      {m.categories.length ? (
+        <Chart rows={m.categories} keys={["cases"]} />
+      ) : (
+        <p>No Data · ไม่มีเคสที่มีข้อมูลรองรับตามช่วง / Zone นี้</p>
+      )}
+      <p role="status">{notice || s.error}</p>
       <Table
         headers={[
-          "Case",
+          "Case ID / วันที่",
           "Zone",
-          "Category",
-          "Severity",
+          "Category / Severity",
           "Status",
-          "Resolution",
+          "Resolved At",
           "Action",
         ]}
       >
-        {cases.map((r, i) => (
-          <tr key={i}>
-            <td>{String(r.caseId)}</td>
-            <td>{String(r.zoneId)}</td>
-            <td>{String(r.category)}</td>
-            <td>{String(r.severity)}</td>
-            <td>{String(r.status)}</td>
-            <td>{String(r.resolvedAt || "No Data")}</td>
+        {m.cases.map((c) => (
+          <tr key={c.id}>
             <td>
-              <button
-                onClick={() => action(String(r.zoneId), String(r.description))}
-              >
-                สร้าง Action
-              </button>
+              {c.id}
+              <br />
+              {c.createdAt}
             </td>
-          </tr>
-        ))}
-        {reports.map((r) => (
-          <tr key={r.id}>
-            <td>{r.sku}</td>
-            <td>{r.zoneId}</td>
-            <td>{r.category}</td>
-            <td>Staff report</td>
-            <td>{r.status}</td>
-            <td>{r.resolutionAt ?? "Pending"}</td>
+            <td>{c.zoneId}</td>
             <td>
-              <button
-                onClick={() =>
-                  action(r.zoneId, `${r.category}: ${r.note || r.sku}`)
+              {c.category} / {c.severity}
+            </td>
+            <td>
+              <select
+                aria-label={`สถานะ ${c.id}`}
+                value={c.status}
+                disabled={s.busy}
+                onChange={(e) =>
+                  void update(c.id, e.target.value as CaseState["status"])
                 }
               >
-                สร้าง Action
+                {["Open", "In progress", "Done"].map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
+              </select>
+            </td>
+            <td>{c.resolvedAt ?? "ยังไม่ปิด"}</td>
+            <td>
+              <button
+                disabled={s.busy || !!c.actionId}
+                onClick={() => void create(c.id)}
+              >
+                {c.actionId ? "เชื่อม Action แล้ว" : "สร้าง Action"}
               </button>
             </td>
           </tr>
         ))}
       </Table>
-      <p>
-        Imported cases: {cases.length} · Resolution ของ Quick Report
-        นับเมื่อผู้จัดการกดปิดเคสหลังแก้ปัญหา · ตรวจสอบสถานะงานได้ที่ Operations
-      </p>
-      <h3>Feedback & Pain Points</h3>
+      <h3>Staff Feedback & Pain Points · Active Dataset</h3>
       <Table headers={["วันที่", "หมวด", "ข้อความ", "สถานะ"]}>
-        {s.feedback.map((r) => (
-          <tr key={r.id}>
-            <td>{r.createdAt}</td>
-            <td>{r.category}</td>
-            <td>{r.description}</td>
-            <td>{r.status}</td>
-          </tr>
-        ))}
+        {s.feedback
+          .filter((r) => r.reference === ref)
+          .map((r) => (
+            <tr key={r.id}>
+              <td>{r.createdAt}</td>
+              <td>{r.category}</td>
+              <td>{r.description}</td>
+              <td>{r.status}</td>
+            </tr>
+          ))}
       </Table>
-      <p>{display(reports.length)} รายงานจากพนักงานใน Browser นี้</p>
+      {s.feedback.some((r) => !r.reference) && (
+        <p>
+          Feedback รุ่นเก่ายังเก็บอยู่ แต่ไม่รวมในหน้านี้เพราะไม่มี Dataset
+          Reference
+        </p>
+      )}
     </section>
   );
 }

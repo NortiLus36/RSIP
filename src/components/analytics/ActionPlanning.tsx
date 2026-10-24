@@ -168,7 +168,9 @@ export function ActionPlanning({
       <h2>Management Action Planning</h2>
       <p className="scenario-note">
         กฎจำลองสำหรับ Portfolio ไม่ใช่เกณฑ์จริงของ Lotus&apos;s หรือ DDI ·
-        เก็บเฉพาะ session ของหน้าจอนี้
+        {onActionsChange
+          ? "บันทึกใน Browser นี้ผ่าน IndexedDB"
+          : "เก็บเฉพาะ session ของหน้าจอนี้"}
       </p>
       <div className="action-form">
         <label>

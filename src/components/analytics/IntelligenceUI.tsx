@@ -1,5 +1,15 @@
 "use client";
 import type { ReactNode } from "react";
+import { KPIInfoPopover } from "./KPIInfoPopover";
+import { metricHelp, metricValue } from "@/lib/analytics/metric-help";
+export function MetricLabel({ title }: { title: string }) {
+  return (
+    <span className="intel-label">
+      <span>{title}</span>
+      <KPIInfoPopover topic={title} helpOverride={metricHelp(title)} />
+    </span>
+  );
+}
 import {
   ResponsiveContainer,
   BarChart,
@@ -10,6 +20,7 @@ import {
   Legend,
   CartesianGrid,
 } from "recharts";
+export const money = (n: number | null | undefined) => metricValue("THB", n);
 export const display = (n: number | null | undefined) =>
   n == null || !Number.isFinite(n)
     ? "No Data"
@@ -29,14 +40,17 @@ export function Field({
 }) {
   return (
     <label>
-      {label}
+      <MetricLabel title={label} />
       <input
+        aria-label={label}
         type="number"
         min={min}
         max={max}
         value={Number.isFinite(value) ? value : ""}
-        onChange={(e) =>
-          onChange(e.target.value === "" ? NaN : Number(e.target.value))
+        onInput={(e) =>
+          onChange(
+            e.currentTarget.value === "" ? NaN : Number(e.currentTarget.value),
+          )
         }
       />
     </label>
@@ -51,8 +65,8 @@ export function Stats({
     <div className="intel-stats">
       {items.map(([k, v]) => (
         <article key={k}>
-          <small>{k}</small>
-          <strong>{display(v)}</strong>
+          <MetricLabel title={k} />
+          <strong>{metricValue(k, v)}</strong>
         </article>
       ))}
     </div>

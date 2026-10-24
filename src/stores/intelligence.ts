@@ -1,5 +1,6 @@
 "use client";
 import { create } from "zustand";
+import { syncCases, type CaseStates } from "@/lib/analytics/customer";
 import type {
   ForecastOptions,
   ForecastSnapshot,
@@ -15,6 +16,8 @@ export type DemoRole =
   | "Store Staff"
   | "Digital Store Talent";
 interface Payload {
+  reviewDays: Record<string, number>;
+  caseStates: CaseStates;
   reportResetAt: Record<string, string>;
   version: 1;
   role: DemoRole;
@@ -26,6 +29,8 @@ interface Payload {
   actions: Record<string, ManagementAction[]>;
 }
 const empty: Payload = {
+  reviewDays: {},
+  caseStates: {},
   reportResetAt: {},
   version: 1,
   role: "Store Manager",
@@ -39,6 +44,7 @@ const empty: Payload = {
 interface IntelligenceState extends Payload {
   selection: Record<string, string>;
   selectSku: (ref: string, sku: string) => void;
+  setReviewDays: (ref: string, days: number) => void;
   ready: boolean;
   busy: boolean;
   error: string;
@@ -50,6 +56,8 @@ interface IntelligenceState extends Payload {
 export const useIntelligence = create<IntelligenceState>((set, get) => ({
   ...empty,
   selection: {},
+  setReviewDays: (ref, days) =>
+    set((s) => ({ reviewDays: { ...s.reviewDays, [ref]: days } })),
   selectSku: (ref, sku) =>
     set((s) => ({ selection: { ...s.selection, [ref]: sku } })),
   ready: false,
@@ -86,6 +94,8 @@ export const useIntelligence = create<IntelligenceState>((set, get) => ({
       const s = get(),
         payload: Payload = {
           version: 1,
+          reviewDays: s.reviewDays,
+          caseStates: s.caseStates,
           reportResetAt: s.reportResetAt,
           role: s.role,
           options: s.options,
@@ -98,6 +108,11 @@ export const useIntelligence = create<IntelligenceState>((set, get) => ({
         };
       if (payload.snapshots.length > 50 || payload.reports.length > 1000)
         throw new Error("MVP จำกัด 50 Forecasts / 1,000 Reports");
+      payload.caseStates = syncCases(
+        payload.caseStates,
+        payload.actions,
+        new Date().toISOString(),
+      );
       await writeWorkflow(payload);
       set({ ...payload, revision: get().revision + 1 });
     } catch (e) {

@@ -215,7 +215,7 @@
     padding: 16px;
   }
   .data-page .data-management section {
-    padding: 16px;
+    padding: 24px;
   }
   .data-page .upload-drop {
     padding: 16px;
@@ -251,4 +251,25 @@
   .phase3 .timeline-collapsed .timeline-body {
     max-height: 0;
   }
+}
+
+.intelligence .intel-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  font-size: 12px;
+}
+.intelligence .intel-label > span {
+  min-width: 0;
+}
+.intelligence .intel-label .info-button {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }

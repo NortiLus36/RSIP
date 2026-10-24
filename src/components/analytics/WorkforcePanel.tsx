@@ -5,7 +5,8 @@ import { useForecast } from "./useForecast";
 import { useSpatial } from "@/stores/spatial";
 import { useExplorer } from "@/stores/explorer";
 import { useIntelligence } from "@/stores/intelligence";
-import { dateAdd, workforcePlan } from "@/lib/analytics/intelligence";
+import { fullDate } from "@/lib/analytics/overview";
+import { dateAdd, monday, workforcePlan } from "@/lib/analytics/intelligence";
 import { forecastSpatial } from "@/lib/analytics/workforce";
 import { taskAction } from "@/lib/analytics/operations";
 import { display, Field, Table, Stats } from "./IntelligenceUI";
@@ -62,7 +63,7 @@ export function WorkforcePanel({
     rows = active?.zones.filter((r) => r.date === day) ?? [],
     current = rows.find((r) => r.zoneId === zone && r.hour === hour);
   const wf = data.dataset.intelligence?.workforce.find(
-    (r) => r.date === date && r.hour === hour && r.zoneId === zone,
+    (r) => r.date === day && r.hour === hour && r.zoneId === zone,
   );
   const visits =
     sp.mode === "Historical"
@@ -86,14 +87,61 @@ export function WorkforcePanel({
     error = String(e);
   }
   const rank = data.store.zones
-    .map((z) => ({
-      id: z.id,
-      name: z.nameTh,
-      occupancy:
-        rows.find((r) => r.zoneId === z.id && r.hour === hour)?.occupancy ??
-        null,
-    }))
-    .sort((a, b) => (b.occupancy ?? -1) - (a.occupancy ?? -1));
+    .map((z) => {
+      const peak = active?.zones
+        .filter(
+          (r) =>
+            r.zoneId === z.id &&
+            r.date >= monday(day) &&
+            r.date <= dateAdd(monday(day), 6) &&
+            r.occupancy !== null,
+        )
+        .sort((a, b) => b.occupancy! - a.occupancy!)[0];
+      const units = peak
+        ? f.rows
+            .filter((r) => r.date === peak.date && r.zoneId === z.id)
+            .reduce((sum, r) => sum + r.quantity, 0) /
+          Math.max(1, data.spatial.hours.length)
+        : 0;
+      const load = !peak
+        ? null
+        : (sp.mode === "Historical"
+            ? (peak.customerCount ?? peak.occupancy!)
+            : peak.occupancy!) *
+            service +
+          restock +
+          (sp.mode === "Forecast" ? units * 0.3 : 0);
+      let recommendation: ReturnType<typeof workforcePlan> | undefined;
+      try {
+        if (load !== null)
+          recommendation = workforcePlan(load, minutes, staff, cost);
+      } catch {
+        /* Invalid inputs shown by planner above. */
+      }
+      return {
+        id: z.id,
+        name: z.nameTh,
+        peak,
+        load,
+        recommendation,
+        categories: data.catalog.categories
+          .filter((c) => c.zoneId === z.id && !c.parentId)
+          .map((c) => c.nameTh)
+          .join(", "),
+      };
+    })
+    .sort((a, b) => (b.peak?.occupancy ?? -1) - (a.peak?.occupancy ?? -1));
+  const weekStart = monday(date);
+  const weeks = Array.from({ length: 21 }, (_, i) => ({
+    date: dateAdd(weekStart, i - 7),
+    kind:
+      i < 7
+        ? "Previous Week · Historical"
+        : i < 14
+          ? "Current Week · Historical"
+          : "Next Week · FORECAST",
+    future: i >= 14,
+  }));
   const focus = () => {
     sp.setLayer("density");
     useSpatial.setState({
@@ -116,6 +164,7 @@ export function WorkforcePanel({
           hour,
           zoneId: zone,
           role: "Store Staff",
+          laborCost: plan.cost,
           priority: plan.level,
           status: "Open" as const,
           reason: `${sp.mode}: ${display(workload)} workload minutes / ${minutes} productive minutes; required ${plan.required}, available ${staff}, additional ${plan.additional}`,
@@ -234,6 +283,18 @@ export function WorkforcePanel({
         </button>
       </div>
       <p>
+        SCENARIO · Capacity และ Service เป็นสมมติฐาน · Occupancy เป็นคนพร้อมกัน
+        ใช้เป็น proxy ภาระงาน ไม่ใช่จำนวนเข้าร้านไม่ซ้ำ
+      </p>
+      <p>
+        Selected Cell: {fullDate(day)} · {hour}:00–{hour + 1}:00 · Zone {zone} ·
+        Occupancy {display(current?.occupancy)} คนพร้อมกัน · Pass-through{" "}
+        {display(current?.customerCount)} ครั้งผ่าน ·{" "}
+        {sp.mode === "Forecast"
+          ? "FORECAST"
+          : data.dataset.intelligence?.sourceLabel}
+      </p>
+      <p>
         วันที่แสดง {day} · Workforce{" "}
         {wf ? "มีข้อมูล กดใช้เพื่อแทนสมมติฐาน" : "No Data ใช้สมมติฐานที่กรอก"} ·
         Forecast เพิ่มภาระเติมสินค้าจาก Forecast units ÷ ชั่วโมงเปิดร้าน × 0.3
@@ -271,19 +332,23 @@ export function WorkforcePanel({
             </tr>
           </thead>
           <tbody>
-            {[dateAdd(date, -7), date, dateAdd(date, 7)].map((d) => (
+            {weeks.map(({ date: d, kind, future }) => (
               <tr key={d}>
-                <td>{d}</td>
+                <td>
+                  {kind}
+                  <br />
+                  {fullDate(d)}
+                </td>
                 {data.spatial.hours.map((h) => {
                   const r = (
-                    d > f.options.cutoff ? forecast?.zones : data.spatial.zones
+                    future ? forecast?.zones : data.spatial.zones
                   )?.find(
                     (r) => r.date === d && r.zoneId === zone && r.hour === h,
                   );
                   return (
                     <td key={h}>
                       <button
-                        title={d > f.options.cutoff ? "Forecast" : "Historical"}
+                        title={`${fullDate(d)} ${h}:00–${h + 1}:00 · Zone ${zone} · Occupancy ${display(r?.occupancy)} คนพร้อมกัน · ${kind}`}
                         style={{
                           background:
                             r?.occupancy == null
@@ -291,17 +356,16 @@ export function WorkforcePanel({
                               : `rgba(0,170,166,${Math.min(1, 0.1 + r.occupancy / 50)})`,
                         }}
                         onClick={() => {
-                          sp.setMode(
-                            d > f.options.cutoff ? "Forecast" : "Historical",
-                          );
+                          sp.setMode(future ? "Forecast" : "Historical");
                           useSpatial.setState({
                             selectedDate: d,
                             selectedHour: h,
                             playing: false,
                           });
+                          if (!future) setDate(d);
                           setHour(h);
+                          sp.setLayer("density");
                           useExplorer.getState().select(zone);
-                          onExplore?.();
                         }}
                         disabled={!r}
                       >
@@ -316,9 +380,18 @@ export function WorkforcePanel({
         </table>
       </div>
       <h3>
-        Zone ranking · {day} {hour}:00
+        Zone ranking · {sp.mode} · {monday(day)} – {dateAdd(monday(day), 6)}
       </h3>
-      <Table headers={["Zone", "Occupancy"]}>
+      <Table
+        headers={[
+          "Zone",
+          "Category (ไม่ใช่ density รายหมวด)",
+          "Peak Day / Hour",
+          "Occupancy คนพร้อมกัน",
+          "Workload นาที",
+          "SCENARIO Action",
+        ]}
+      >
         {rank.map((r) => (
           <tr key={r.id}>
             <td>
@@ -331,7 +404,15 @@ export function WorkforcePanel({
                 {r.name}
               </button>
             </td>
-            <td>{display(r.occupancy)}</td>
+            <td>{r.categories || "No Data"}</td>
+            <td>
+              {r.peak
+                ? `${fullDate(r.peak.date)} ${r.peak.hour}:00–${r.peak.hour + 1}:00`
+                : "No Data"}
+            </td>
+            <td>{display(r.peak?.occupancy)}</td>
+            <td>{display(r.load)}</td>
+            <td>{r.recommendation?.level ?? "No Data"}</td>
           </tr>
         ))}
       </Table>

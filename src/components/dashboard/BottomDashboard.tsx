@@ -40,7 +40,7 @@ export function BottomDashboard({
           )}
           <small>
             {snapshot.source === "Imported" ? "IMPORTED DATA" : "DEMO"} ·{" "}
-            {formatPeriod(snapshot.period)} · OOS = stock snapshot
+            Reporting Date: {formatPeriod(snapshot.period)} · OOS = stock snapshot
           </small>
         </div>
         <button
