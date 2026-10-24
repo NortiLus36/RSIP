@@ -481,3 +481,35 @@ test("Calendar and supply coverage use meaningful date fields", () => {
   assert.equal(c[0].to, "2026-10-18");
   assert.equal(c[1].from, "2026-10-26");
 });
+test("Review distinguishes confirmed closing inventory from ordinary snapshots and reads imported waste", async () => {
+  const d = structuredClone(await demoPromise),
+    f = demandForecast(d, {
+      ...options,
+      start: "2026-10-23",
+      cutoff: "2026-10-22",
+      horizon: 1,
+    })[0];
+  const snap: ForecastSnapshot = {
+    id: "closing",
+    createdAt: "2026-10-22T01:00:00Z",
+    reference: "test",
+    storeId: d.store.id,
+    options,
+    rows: [f],
+    backtest: true,
+  };
+  assert.equal(forecastVariance(snap, d)[0].closingInventory, null);
+  d.dataset
+    .intelligence!.inventory.filter(
+      (r) => r.sku === f.sku && r.snapshotDate === f.date,
+    )
+    .forEach((r) => {
+      r.isClosingSnapshot = true;
+    });
+  d.dataset.intelligence!.waste = [
+    { date: f.date, sku: f.sku, quantity: 2, costAmount: 10 },
+  ];
+  const r = forecastVariance(snap, d)[0];
+  assert.equal(r.closingInventory, r.stockSnapshot);
+  assert.equal(r.wasteQuantity, 2);
+});

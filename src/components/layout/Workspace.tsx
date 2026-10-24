@@ -61,16 +61,31 @@ export function Workspace(
   );
   const forecast = useForecast(updated);
   const active = useMemo(() => {
-    if (mode !== "Forecast" || forecast.error) return updated;
+    if (mode !== "Forecast") return updated;
+    if (forecast.error)
+      return {
+        ...updated,
+        spatial: {
+          ...updated.spatial,
+          source: "FORECAST" as const,
+          zones: [],
+          stock: [],
+          storeHours: [],
+        },
+      };
     return { ...updated, spatial: forecastSpatial(updated, forecast.options) };
   }, [updated, mode, forecast.error, forecast.options]);
   useEffect(() => {
     useSpatial.getState().configure(active.spatial.dates, active.spatial.hours);
   }, [revision, active.spatial]);
+  useEffect(() => {
+    useExplorer.getState().select(null, false);
+  }, [revision]);
   return (
     <WorkspaceBody
       {...active}
       historicalSpatial={updated.spatial}
+      forecastError={forecast.error}
       operationsPage={operationsPage}
       initialTab={initialTab}
       demoData={demo}
@@ -85,6 +100,7 @@ function WorkspaceBody({
   demoData,
   revision,
   historicalSpatial,
+  forecastError,
   ...data
 }: DashboardData & {
   operationsPage?: boolean;
@@ -92,6 +108,7 @@ function WorkspaceBody({
   demoData: DashboardData;
   revision: number;
   historicalSpatial: DashboardData["spatial"];
+  forecastError: string;
 }) {
   const { source, bundle, hydrated, error } = useDataSource();
   const router = useRouter();
@@ -197,6 +214,12 @@ function WorkspaceBody({
               </details>
             )}
             {error && <span role="alert">{error}</span>}
+            {forecastError && (
+              <span role="alert">
+                Forecast ใช้ไม่ได้: {forecastError} · แก้สมมติฐานที่ Demand
+                Forecast
+              </span>
+            )}
           </div>
           <div
             className={`scene-card ${selected ? (drawerCollapsed ? "drawer-is-collapsed" : "drawer-is-open") : ""}`}

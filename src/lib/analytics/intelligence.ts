@@ -441,12 +441,23 @@ export function forecastVariance(
       data.dataset.intelligence?.waste.filter(
         (r) => r.sku === f.sku && r.date === f.date,
       ) ?? [];
+    const stockSnapshot = inventoryRows.length
+      ? inventoryRows.reduce((s, r) => s + Number(r.shelfStock), 0) +
+        [...warehouses.values()].reduce((s, n) => s + n, 0)
+      : null;
     return {
       ...f,
-      stockSnapshot: inventoryRows.length
-        ? inventoryRows.reduce((s, r) => s + Number(r.shelfStock), 0) +
-          [...warehouses.values()].reduce((s, n) => s + n, 0)
-        : null,
+      stockSnapshot,
+      closingInventory:
+        inventoryRows.length &&
+        inventoryRows.every(
+          (r) =>
+            r.isClosingSnapshot === true ||
+            r.isClosingSnapshot === "true" ||
+            r.isClosingSnapshot === 1,
+        )
+          ? stockSnapshot
+          : null,
       wasteQuantity: waste.length
         ? waste.reduce((s, r) => s + Number(r.quantity), 0)
         : null,

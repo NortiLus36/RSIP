@@ -120,6 +120,13 @@ export const schemas: Record<DatasetKind, Field[]> = {
     ).map(([n, d, e]) => f(n, "number", d, e)),
     f("snapshotDate", "date", "วันที่สต็อก YYYY-MM-DD", "2026-10-23"),
     f(
+      "isClosingSnapshot",
+      "boolean",
+      "true เฉพาะยอดตรวจนับปิดวันแล้ว; false/ว่าง = Stock Snapshot ทั่วไป",
+      "false",
+      false,
+    ),
+    f(
       "shelfCapacity",
       "number",
       "ความจุชั้นต่อ SKU + Fixture; ถ้าไม่ระบุใช้ยอดบนชั้นเป็นขอบเขตที่รู้",

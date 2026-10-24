@@ -255,7 +255,7 @@ export function StaffHub({ data }: { data: DashboardData }) {
             <input
               type="datetime-local"
               value={reportTime}
-              onChange={(e) => setReportTime(e.target.value)}
+              onInput={(e) => setReportTime(e.currentTarget.value)}
             />
           </label>
           <p>

@@ -41,7 +41,7 @@ export function WorkforcePanel({
         <input
           type="date"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
+          onInput={(e) => setDate(e.currentTarget.value)}
         />
       </label>
     );
@@ -174,7 +174,7 @@ export function WorkforcePanel({
           <input
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onInput={(e) => setDate(e.currentTarget.value)}
           />
         </label>
         <label>

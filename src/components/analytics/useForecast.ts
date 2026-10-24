@@ -38,7 +38,12 @@ export function useForecast(data: DashboardData) {
     options,
     ...result,
     setOptions: (p: Partial<ForecastOptions>) =>
-      useIntelligence.getState().setOptions(ref, { ...options, ...p }),
+      useIntelligence
+        .getState()
+        .setOptions(ref, {
+          ...(useIntelligence.getState().options[ref] ?? options),
+          ...p,
+        }),
   };
 }
 

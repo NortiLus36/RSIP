@@ -88,7 +88,7 @@ function Overview({ data }: { data: DashboardData }) {
         <input
           type="date"
           value={end}
-          onChange={(e) => setEnd(e.target.value)}
+          onInput={(e) => setEnd(e.currentTarget.value)}
         />
       </label>
     );
@@ -161,7 +161,7 @@ function Overview({ data }: { data: DashboardData }) {
           <input
             type="date"
             value={end}
-            onChange={(e) => setEnd(e.target.value)}
+            onInput={(e) => setEnd(e.currentTarget.value)}
           />
         </label>
         {period === "Custom" && (
@@ -171,7 +171,7 @@ function Overview({ data }: { data: DashboardData }) {
               <input
                 type="date"
                 value={start}
-                onChange={(e) => setStart(e.target.value)}
+                onInput={(e) => setStart(e.currentTarget.value)}
               />
             </label>
             <label>
@@ -179,7 +179,7 @@ function Overview({ data }: { data: DashboardData }) {
               <input
                 type="date"
                 value={prior}
-                onChange={(e) => setPrior(e.target.value)}
+                onInput={(e) => setPrior(e.currentTarget.value)}
               />
             </label>
           </>
@@ -357,7 +357,7 @@ function Forecast({ data }: { data: DashboardData }) {
           <input
             type="date"
             value={f.options.cutoff}
-            onChange={(e) => f.setOptions({ cutoff: e.target.value })}
+            onInput={(e) => f.setOptions({ cutoff: e.currentTarget.value })}
           />
         </label>
         <label>
@@ -365,7 +365,7 @@ function Forecast({ data }: { data: DashboardData }) {
           <input
             type="date"
             value={f.options.start}
-            onChange={(e) => f.setOptions({ start: e.target.value })}
+            onInput={(e) => f.setOptions({ start: e.currentTarget.value })}
           />
         </label>
         <Field
@@ -671,7 +671,7 @@ function Profit({ data }: { data: DashboardData }) {
         {Object.entries({
           order: "สั่งเพิ่ม units",
           discount: "ส่วนลด %",
-          uplift: "Demand uplift %",
+          uplift: "Demand เพิ่มจาก Forecast %",
           labor: "ค่าแรงเพิ่ม THB",
           campaign: "Campaign THB",
           wasteUnits: "Waste units",
@@ -770,7 +770,7 @@ function Review({ data }: { data: DashboardData }) {
           <input
             type="date"
             value={from}
-            onChange={(e) => setFrom(e.target.value)}
+            onInput={(e) => setFrom(e.currentTarget.value)}
           />
         </label>
         <label>
@@ -778,7 +778,7 @@ function Review({ data }: { data: DashboardData }) {
           <input
             type="date"
             value={to}
-            onChange={(e) => setTo(e.target.value)}
+            onInput={(e) => setTo(e.currentTarget.value)}
           />
         </label>
         <label>
@@ -873,6 +873,7 @@ function Review({ data }: { data: DashboardData }) {
               "Revenue variance THB",
               "Waste units",
               "Inventory snapshot units",
+              "Confirmed closing units",
             ]}
           >
             {rows.map((r) => (
@@ -891,6 +892,7 @@ function Review({ data }: { data: DashboardData }) {
                 </td>
                 <td>{display(r.wasteQuantity)}</td>
                 <td>{display(r.stockSnapshot)}</td>
+                <td>{display(r.closingInventory)}</td>
               </tr>
             ))}
           </Table>
