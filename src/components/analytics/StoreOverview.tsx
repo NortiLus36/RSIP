@@ -25,6 +25,14 @@ import { KPIInfoPopover } from "./KPIInfoPopover";
 import type { HelpTopic } from "@/config/kpi-help";
 import { metricValue } from "@/lib/analytics/metric-help";
 import { display, money, Table } from "./IntelligenceUI";
+const periodLabels: Record<OverviewFilters["mode"], string> = {
+  Daily: "รายวัน",
+  "Same weekday": "วันเดียวกันของสัปดาห์ก่อน",
+  WTD: "ตั้งแต่ต้นสัปดาห์ถึงวันที่เลือก",
+  Weekly: "รายสัปดาห์",
+  Festival: "ช่วงเทศกาล",
+  Custom: "กำหนดช่วงเวลาเอง",
+};
 const help = (
   title: string,
   formula: string,
@@ -324,7 +332,9 @@ export function StoreOverview({ data }: { data: DashboardData }) {
             }
           >
             {overviewModes.map((mode) => (
-              <option key={mode}>{mode}</option>
+              <option key={mode} value={mode}>
+                {periodLabels[mode]}
+              </option>
             ))}
           </select>
         </label>
@@ -457,7 +467,7 @@ export function StoreOverview({ data }: { data: DashboardData }) {
             className="overview-comparison"
             aria-label="Comparison summary"
           >
-            <h3>{f.mode} · Comparison Summary</h3>
+            <h3>{periodLabels[f.mode]} · สรุปเปรียบเทียบ</h3>
             <div className="overview-periods">
               <div>
                 <span className="overview-key current" />{" "}
