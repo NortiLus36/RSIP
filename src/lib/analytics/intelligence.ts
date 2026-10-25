@@ -7,6 +7,40 @@ import type {
 } from "@/types/intelligence";
 import { inventoryForSku } from "./catalog";
 import { salesTotals } from "./selectors";
+import { validDate } from "@/lib/import/validate";
+export const forecastScenarioFactors = {
+  Conservative: 0.85,
+  Expected: 1,
+  Optimistic: 1.15,
+} as const;
+export function targetEventFactor(
+  calendar: DataRow[],
+  date: string,
+  sku: string,
+  options: ForecastOptions,
+) {
+  const factor = (kind: "festival" | "promotion") => {
+    const mode =
+      kind === "festival" ? options.festivalMode : options.promotionMode;
+    const n = kind === "festival" ? options.festivalPct : options.promotionPct;
+    if (mode === undefined)
+      return n ? 1 + n / 100 : eventFactor(calendar, date, sku, kind);
+    if (mode === "calendar") return eventFactor(calendar, date, sku, kind);
+    const applies = calendar.some(
+      (e) =>
+        e.kind === kind &&
+        String(e.startDate) <= date &&
+        String(e.endDate) >= date &&
+        (!e.sku || e.sku === sku),
+    );
+    return applies ? 1 + n / 100 : 1;
+  };
+  return (
+    eventFactor(calendar, date, sku, "preparation") *
+    factor("festival") *
+    factor("promotion")
+  );
+}
 export const dateAdd = (date: string, n: number) =>
   new Date(Date.parse(date + "T00:00:00Z") + n * 86400000)
     .toISOString()
@@ -40,6 +74,17 @@ export function demandForecast(
   options: ForecastOptions,
   skus?: string[],
 ): ForecastRow[] {
+  if (!validDate(options.start) || !validDate(options.cutoff))
+    throw Error(
+      "กรุณาระบุวันที่เริ่มคาดการณ์และวันที่ใช้ข้อมูลย้อนหลังให้ถูกต้อง",
+    );
+  if (
+    !(options.scenario in forecastScenarioFactors) ||
+    [options.festivalMode, options.promotionMode].some(
+      (m) => m !== undefined && m !== "calendar" && m !== "manual",
+    )
+  )
+    throw Error("รูปแบบการคาดการณ์หรือโหมดปฏิทินไม่ถูกต้อง");
   if (
     !Number.isInteger(options.horizon) ||
     options.horizon < 1 ||
@@ -47,7 +92,7 @@ export function demandForecast(
     options.start <= options.cutoff
   )
     throw new Error(
-      "Forecast ต้องเริ่มหลัง Training Cutoff และ Horizon 1–7 วัน",
+      "วันที่เริ่มคาดการณ์ต้องอยู่หลังวันที่ใช้ข้อมูลย้อนหลัง และจำนวนวันต้องเป็นจำนวนเต็ม 1–7 วัน หากทดสอบย้อนหลังให้เลื่อนวันที่ใช้ข้อมูลย้อนหลังให้เร็วขึ้น",
     );
   for (const n of [
     options.baseDemand,
@@ -59,7 +104,12 @@ export function demandForecast(
       throw new Error("สมมติฐานต้องเป็นตัวเลข 0–10,000");
   const calendar = data.dataset.intelligence?.calendar ?? [];
   const history = data.dataset.sales.filter(
-    (r) => r.date <= options.cutoff && r.quantity !== undefined,
+    (r) =>
+      validDate(r.date) &&
+      r.date <= options.cutoff &&
+      r.quantity !== undefined &&
+      Number.isFinite(r.quantity) &&
+      r.quantity >= 0,
   );
   const daily = new Map<string, number>();
   for (const r of history) {
@@ -72,9 +122,10 @@ export function demandForecast(
     .flatMap((p) =>
       Array.from({ length: options.horizon }, (_, i) => {
         const date = dateAdd(options.start, i),
-          zoneId = data.catalog.categories.find(
-            (c) => c.id === p.categoryId,
-          )!.zoneId;
+          category = data.catalog.categories.find((c) => c.id === p.categoryId);
+        if (!category)
+          throw Error(`SKU ${p.sku}: ไม่มีหมวดสินค้าที่สัมพันธ์กัน (Unmapped)`);
+        const zoneId = category.zoneId;
         const same = historyDates.filter(
           (d) =>
             weekday(d) === weekday(date) &&
@@ -95,25 +146,13 @@ export function demandForecast(
             : (plan?.averageDailyDemand ?? options.baseDemand)
           : mean(observed);
         // Explicit overrides replace that event class, rather than compounding it twice.
-        const targetEvent =
-          eventFactor(calendar, date, p.sku, "preparation") *
-          (options.festivalPct
-            ? 1 + options.festivalPct / 100
-            : eventFactor(calendar, date, p.sku, "festival")) *
-          (options.promotionPct
-            ? 1 + options.promotionPct / 100
-            : eventFactor(calendar, date, p.sku, "promotion"));
+        const targetEvent = targetEventFactor(calendar, date, p.sku, options);
         const factor =
           targetEvent *
           (manual && [0, 6].includes(weekday(date))
             ? 1 + options.weekendPct / 100
             : 1);
-        const scenario =
-          options.scenario === "Conservative"
-            ? 0.85
-            : options.scenario === "Optimistic"
-              ? 1.15
-              : 1;
+        const scenario = forecastScenarioFactors[options.scenario];
         const q = Math.max(0, Math.ceil(baseline * factor * scenario));
         if (!Number.isSafeInteger(q) || q > 1e9)
           throw new Error("Forecast เกินขอบเขต MVP");
@@ -128,7 +167,7 @@ export function demandForecast(
           baseline,
           samples: observed.length,
           manual,
-          assumption: `${manual ? "Manual assumption (ประวัติ weekday < 2 หรือผู้ใช้เลือก)" : "Same-weekday baseline; normalize calendar effects ออกจากประวัติ"} × calendar ${targetEvent.toFixed(2)} × extra festival/promotion × ${options.scenario}; range ±20% เป็นสมมติฐาน ไม่ใช่ช่วงความเชื่อมั่น`,
+          assumption: `${manual ? "สมมติฐานผู้ใช้ / แผนสินค้า เนื่องจากประวัติวันเดียวกันน้อยกว่า 2 หรือเลือกกำหนดเอง" : "ฐานวันเดียวกันในสัปดาห์ ตัดผลปฏิทินออกจากอดีตก่อน"} × ปัจจัยปฏิทิน ${targetEvent.toFixed(2)} × รูปแบบ ${scenario}; ช่วง ±20% เป็นสมมติฐาน ไม่ใช่ช่วงความเชื่อมั่น`,
         };
       }),
     );

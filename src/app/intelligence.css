@@ -273,3 +273,91 @@
   align-items: center;
   justify-content: center;
 }
+
+/* Demand Forecast only; other analytics and Data Management retain their layout. */
+.demand-forecast .forecast-main-fields,
+.demand-forecast .forecast-advanced-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  max-width: 1100px;
+  margin: 24px 0;
+  align-items: start;
+}
+.demand-forecast .forecast-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.demand-forecast .forecast-summary article {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #dce9e7;
+  border-radius: 10px;
+  background: #f6fbfa;
+}
+.demand-forecast .forecast-summary strong {
+  display: block;
+  font-size: 24px;
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+.demand-forecast .forecast-context {
+  padding: 16px;
+  border-left: 4px solid #02aba4;
+  background: #effaf8;
+  border-radius: 8px;
+}
+.demand-forecast .forecast-save {
+  background: #02aba4;
+  color: white;
+}
+.demand-forecast .forecast-toggle {
+  flex-direction: row;
+  align-items: center;
+  min-height: 42px;
+}
+.demand-forecast .forecast-override {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.demand-forecast .forecast-chart {
+  height: 320px;
+  min-width: 0;
+  margin: 24px 0;
+}
+.demand-forecast .intel-table td {
+  min-width: 120px;
+}
+.demand-forecast .intel-table details {
+  margin: 8px 0;
+  padding: 0;
+  border: 0;
+}
+.demand-forecast .forecast-advanced,
+.demand-forecast .forecast-calendar {
+  padding: 16px;
+  border: 1px solid #dce9e7;
+  border-radius: 8px;
+}
+@media (max-width: 1100px) {
+  .demand-forecast .forecast-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .demand-forecast .forecast-main-fields,
+  .demand-forecast .forecast-advanced-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 800px) {
+  .demand-forecast .forecast-main-fields,
+  .demand-forecast .forecast-advanced-fields,
+  .demand-forecast .forecast-summary {
+    grid-template-columns: 1fr;
+  }
+  .demand-forecast .forecast-summary strong {
+    font-size: 22px;
+  }
+}

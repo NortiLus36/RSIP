@@ -11,6 +11,8 @@ export interface IntelligenceData {
   waste: DataRow[];
 }
 export interface ForecastOptions {
+  festivalMode?: "calendar" | "manual";
+  promotionMode?: "calendar" | "manual";
   start: string;
   horizon: number;
   cutoff: string;
@@ -35,6 +37,9 @@ export interface ForecastRow {
   assumption: string;
 }
 export interface ForecastSnapshot {
+  scope?: { categoryId: string; sku: string };
+  totals?: { quantity: number; revenue: number; low: number; high: number };
+  assumptions?: string[];
   selectedSku?: string;
   selectedCategory?: string;
   id: string;

@@ -43,6 +43,7 @@ const empty: Payload = {
 };
 interface IntelligenceState extends Payload {
   selection: Record<string, string>;
+  selectionAt: Record<string, number>;
   selectSku: (ref: string, sku: string) => void;
   setReviewDays: (ref: string, days: number) => void;
   ready: boolean;
@@ -56,10 +57,14 @@ interface IntelligenceState extends Payload {
 export const useIntelligence = create<IntelligenceState>((set, get) => ({
   ...empty,
   selection: {},
+  selectionAt: {},
   setReviewDays: (ref, days) =>
     set((s) => ({ reviewDays: { ...s.reviewDays, [ref]: days } })),
   selectSku: (ref, sku) =>
-    set((s) => ({ selection: { ...s.selection, [ref]: sku } })),
+    set((s) => ({
+      selection: { ...s.selection, [ref]: sku },
+      selectionAt: { ...s.selectionAt, [ref]: Date.now() },
+    })),
   ready: false,
   busy: false,
   error: "",

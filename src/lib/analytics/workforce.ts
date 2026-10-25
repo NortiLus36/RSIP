@@ -1,7 +1,13 @@
 import type { DashboardData } from "@/data/providers";
 import type { ForecastOptions } from "@/types/intelligence";
 import type { SpatialDataset } from "@/types/spatial";
-import { dateAdd, weekday, eventFactor } from "./intelligence";
+import {
+  dateAdd,
+  weekday,
+  eventFactor,
+  targetEventFactor,
+  forecastScenarioFactors,
+} from "./intelligence";
 // Occupancy is a concurrent headcount, never a sum of daily visits.
 export function forecastSpatial(
   data: DashboardData,
@@ -41,12 +47,7 @@ export function forecastSpatial(
             ? rows.reduce((s, r) => s + r.occupancy! / factor(r.date), 0) /
               rows.length
             : null;
-        const scenario =
-          options.scenario === "Conservative"
-            ? 0.85
-            : options.scenario === "Optimistic"
-              ? 1.15
-              : 1;
+        const scenario = forecastScenarioFactors[options.scenario];
         return {
           date,
           hour,
@@ -60,23 +61,7 @@ export function forecastSpatial(
                       ? skus.reduce(
                           (sum, sku) =>
                             sum +
-                            eventFactor(calendar, date, sku, "preparation") *
-                              (options.festivalPct
-                                ? 1 + options.festivalPct / 100
-                                : eventFactor(
-                                    calendar,
-                                    date,
-                                    sku,
-                                    "festival",
-                                  )) *
-                              (options.promotionPct
-                                ? 1 + options.promotionPct / 100
-                                : eventFactor(
-                                    calendar,
-                                    date,
-                                    sku,
-                                    "promotion",
-                                  )),
+                            targetEventFactor(calendar, date, sku, options),
                           0,
                         ) / skus.length
                       : 1) *
