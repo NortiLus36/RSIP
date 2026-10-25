@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { showOperationsInNavigation } from "@/config/navigation";
 import { Box, PanelLeftClose, PanelLeftOpen, FlaskConical } from "lucide-react";
 import type { DashboardData } from "@/data/providers";
 import { useExplorer } from "@/stores/explorer";
@@ -163,13 +164,15 @@ function WorkspaceBody({
               {t}
             </button>
           ))}
-          <Link
-            className={operationsPage ? "active" : ""}
-            aria-current={operationsPage ? "page" : undefined}
-            href="/operations/action-planning"
-          >
-            Operations
-          </Link>
+          {showOperationsInNavigation && (
+            <Link
+              className={operationsPage ? "active" : ""}
+              aria-current={operationsPage ? "page" : undefined}
+              href="/operations/action-planning"
+            >
+              Operations
+            </Link>
+          )}
         </nav>
         <div className="nav-end">
           <span className="demo-badge">

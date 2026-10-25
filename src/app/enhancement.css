@@ -22,6 +22,10 @@
   font-size: 12px;
   white-space: nowrap;
 }
+/* Navigation visibility is controlled by config, never by item position. */
+.phase3 .navbar nav button:last-child {
+  display: block;
+}
 .phase3 .navbar nav button.active,
 .phase3 .navbar nav a.active {
   background: #007c77;

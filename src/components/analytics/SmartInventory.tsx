@@ -15,6 +15,7 @@ import { fullDate } from "@/lib/analytics/overview";
 import { validDate } from "@/lib/import/validate";
 import { KPIInfoPopover } from "./KPIInfoPopover";
 import { display, Table } from "./IntelligenceUI";
+import { showOperationsInNavigation } from "@/config/navigation";
 function Info({ title, text }: { title: string; text: string }) {
   return (
     <span className="inventory-label">
@@ -453,6 +454,12 @@ export function SmartInventory({
           สร้างงานพิจารณาสั่งซื้อ
         </button>
       </div>
+      {!showOperationsInNavigation && (
+        <p>
+          การสร้างงานเป็นฟีเจอร์เพิ่มเติม ·{" "}
+          <a href="/operations/action-planning/">เปิดระบบ Operations</a>
+        </p>
+      )}
       <p role="status" aria-live="polite">
         {notice || w.error}
       </p>
