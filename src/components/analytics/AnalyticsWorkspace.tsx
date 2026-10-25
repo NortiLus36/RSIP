@@ -1,40 +1,38 @@
 "use client";
 import { StoreOverview } from "./StoreOverview";
 import { DemandForecast } from "./DemandForecast";
-import { useState } from "react";
+import { useState, useSyncExternalStore, useEffect } from "react";
 import { safeCsv } from "@/lib/import/parse";
 import { fullDate } from "@/lib/analytics/overview";
 import type { DashboardData } from "@/data/providers";
-import {
-  dateAdd,
-  inventoryRecommendation,
-  profitScenario,
-  forecastVariance,
-} from "@/lib/analytics/intelligence";
-import { useForecast, usePlanningSku } from "./useForecast";
+import { forecastVariance } from "@/lib/analytics/intelligence";
 import { useIntelligence } from "@/stores/intelligence";
 import { WorkforcePanel } from "./WorkforcePanel";
 import { CustomerPanel } from "./CustomerPanel";
 import { SmartInventory } from "./SmartInventory";
-import { display, money, Field, Stats, Table, Chart } from "./IntelligenceUI";
-const moduleLabels = [
-  "ภาพรวมผลการดำเนินงาน",
-  "คาดการณ์ความต้องการสินค้า",
-  "วางแผนสินค้าคงคลัง",
-  "วิเคราะห์ต้นทุนและกำไร",
-  "วิเคราะห์ช่วงเวลาเร่งด่วนและกำลังคน",
-  "ประสบการณ์และปัญหาลูกค้า",
-  "สรุปและประเมินผลการดำเนินงาน",
-];
-const modules = [
-  "Store Overview",
-  "คาดการณ์ความต้องการสินค้า",
-  "Smart Inventory",
-  "Profit & Margin",
-  "Peak Time & Workforce",
-  "Customer Experience",
-  "Performance Review",
-];
+import { display, money, Stats, Table, Chart } from "./IntelligenceUI";
+import { ProfitMargin } from "./ProfitMargin";
+import {
+  analyticsModules,
+  visibleAnalyticsModules,
+  resolveAnalyticsTab,
+} from "@/config/analytics-modules";
+const modules = analyticsModules.map((m) => m.id);
+function subscribeTab(callback: () => void) {
+  window.addEventListener("popstate", callback);
+  return () => window.removeEventListener("popstate", callback);
+}
+function readTab() {
+  const query = new URLSearchParams(window.location.search);
+  return resolveAnalyticsTab(query.get("analyticsTab") ?? query.get("tab"));
+}
+function setTab(value: string) {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("tab");
+  url.searchParams.set("analyticsTab", resolveAnalyticsTab(value));
+  window.history.replaceState(null, "", url);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+}
 export function AnalyticsWorkspace({
   data,
   onExplore,
@@ -42,7 +40,13 @@ export function AnalyticsWorkspace({
   data: DashboardData;
   onExplore?: () => void;
 }) {
-  const [tab, setTab] = useState(modules[0]);
+  const tab = useSyncExternalStore(subscribeTab, readTab, () => modules[0]);
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const requested = query.get("analyticsTab") ?? query.get("tab");
+    if (requested && requested !== resolveAnalyticsTab(requested))
+      setTab(modules[0]);
+  }, []);
   return (
     <div className="analytics-workspace intelligence">
       <header>
@@ -51,9 +55,13 @@ export function AnalyticsWorkspace({
         <p>{data.dataset.intelligence?.sourceLabel} · THB · Asia/Bangkok</p>
       </header>
       <nav className="module-nav" aria-label="Analytics modules">
-        {modules.map((m, i) => (
-          <button key={m} aria-pressed={m === tab} onClick={() => setTab(m)}>
-            {moduleLabels[i]}
+        {visibleAnalyticsModules.map((m) => (
+          <button
+            key={m.id}
+            aria-pressed={m.id === tab}
+            onClick={() => setTab(m.id)}
+          >
+            {m.label}
           </button>
         ))}
       </nav>
@@ -69,7 +77,7 @@ export function AnalyticsWorkspace({
             onForecast={() => setTab(modules[1])}
           />
         ) : tab === modules[3] ? (
-          <Profit data={data} />
+          <ProfitMargin data={data} />
         ) : tab === modules[4] ? (
           <WorkforcePanel data={data} onExplore={onExplore} />
         ) : tab === modules[5] ? (
@@ -79,209 +87,6 @@ export function AnalyticsWorkspace({
         )}
       </div>
     </div>
-  );
-}
-function Profit({ data }: { data: DashboardData }) {
-  const f = useForecast(data),
-    [sku, setSku] = usePlanningSku(data),
-    [v, setV] = useState({
-      discount: 0,
-      uplift: 0,
-      labor: 0,
-      campaign: 0,
-      wasteUnits: 0,
-      other: 0,
-      order: 0,
-    }),
-    [inTime, setInTime] = useState(true),
-    [overrides, setOverrides] = useState<
-      Record<string, { price?: number; cost?: number; demand?: number }>
-    >({});
-  const product = data.catalog.products.find((p) => p.sku === sku);
-  let rec: ReturnType<typeof inventoryRecommendation> = null,
-    error = f.error;
-  try {
-    rec = inventoryRecommendation(
-      data,
-      f.rows,
-      sku,
-      useIntelligence.getState().reviewDays[f.ref] ?? 1,
-      undefined,
-      useIntelligence.getState().planningAssumptions[f.ref]?.[sku],
-    );
-  } catch (e) {
-    error = String(e);
-  }
-  const input = {
-    price: product?.sellingPrice ?? NaN,
-    cost: product?.unitCost ?? NaN,
-    demand: rec?.demand ?? NaN,
-    ...overrides[sku],
-  };
-  let result: ReturnType<typeof profitScenario> | undefined;
-  try {
-    if (product && rec)
-      result = profitScenario({
-        ...v,
-        ...input,
-        available: rec.availableStock + rec.eligibleHorizon,
-        orderInTime: inTime,
-      });
-  } catch (e) {
-    error = String(e);
-  }
-  return (
-    <section>
-      <h2>Profit & Margin</h2>
-      <p>
-        Scenario แยกจาก Actual · ใช้ Forecast และราคาทุนจาก Active Dataset ·
-        ไม่เกินสินค้าที่มีและคำสั่งซื้อที่มาทัน
-      </p>
-      <div className="intel-fields">
-        <label>
-          SKU
-          <select value={sku} onChange={(e) => setSku(e.target.value)}>
-            {data.catalog.products.map((p) => (
-              <option key={p.sku} value={p.sku}>
-                {p.nameTh}
-              </option>
-            ))}
-          </select>
-        </label>
-        {(["price", "cost", "demand"] as const).map((k) => (
-          <Field
-            key={k}
-            label={
-              {
-                price: "Scenario Selling Price THB",
-                cost: "Scenario Unit Cost THB",
-                demand: "Scenario Forecast units",
-              }[k]
-            }
-            value={input[k]}
-            onChange={(n) =>
-              setOverrides({
-                ...overrides,
-                [sku]: { ...overrides[sku], [k]: n },
-              })
-            }
-          />
-        ))}
-        <button onClick={() => setOverrides({ ...overrides, [sku]: {} })}>
-          คืนราคา / ทุน / Demand จาก Dataset
-        </button>
-        {Object.entries({
-          order: "สั่งเพิ่ม units",
-          discount: "ส่วนลด %",
-          uplift: "Demand เพิ่มจาก Forecast %",
-          labor: "ค่าแรงเพิ่ม THB",
-          campaign: "Campaign THB",
-          wasteUnits: "Waste units",
-          other: "ต้นทุนอื่น THB",
-        }).map(([k, label]) => (
-          <Field
-            key={k}
-            label={label}
-            value={v[k as keyof typeof v]}
-            max={k === "discount" ? 100 : 1e9}
-            onChange={(n) => setV({ ...v, [k]: n })}
-          />
-        ))}
-        <label>
-          คำสั่งซื้อทัน Horizon
-          <input
-            type="checkbox"
-            checked={inTime}
-            onChange={(e) => setInTime(e.target.checked)}
-          />
-        </label>
-      </div>
-      <p>
-        FORECAST Reference: {f.ref} · {f.options.start} · {f.options.horizon}{" "}
-        วัน · {f.options.scenario} · ค่าแรงเพิ่มกรอกเป็น SCENARIO
-        แยกจากตารางเวรจริง
-      </p>
-      <button
-        onClick={() => {
-          const zoneId = data.catalog.categories.find(
-            (c) => c.id === product?.categoryId,
-          )?.zoneId;
-          const tasks = useIntelligence
-            .getState()
-            .tasks.filter(
-              (t) =>
-                t.reference === f.ref &&
-                t.zoneId === zoneId &&
-                t.date >= f.options.start &&
-                t.date <= dateAdd(f.options.start, f.options.horizon - 1) &&
-                t.status !== "Done",
-            );
-          setV({
-            ...v,
-            labor: tasks.reduce((sum, t) => sum + (t.laborCost ?? 0), 0),
-          });
-        }}
-      >
-        ใช้ค่าแรงเพิ่มจากงาน Workforce ช่วง / Zone นี้
-      </button>
-      {!rec && (
-        <p>No Data · ต้องมี Inventory ที่ใช้เป็นสต็อกเปิดของช่วง Forecast</p>
-      )}
-      <p>
-        Price {money(product?.sellingPrice)} · Cost {money(product?.unitCost)} ·
-        Demand {display(rec?.demand)} · Available {display(rec?.availableStock)}{" "}
-        · แนะนำสั่ง {display(rec?.suggestedOrder)}
-      </p>
-      <p role="alert">{error}</p>
-      <button
-        disabled={!rec}
-        onClick={() => setV({ ...v, order: rec?.suggestedOrder ?? 0 })}
-      >
-        ใช้จำนวนสั่งเพิ่มจาก Smart Inventory
-      </button>
-      {result && (
-        <>
-          <Stats
-            items={Object.entries(result).map(
-              ([k, v]) => [profitLabels[k] ?? k, v] as [string, number | null],
-            )}
-          />
-          <Table headers={["Metric", "Baseline", "SCENARIO"]}>
-            <tr>
-              <td>Gross Margin %</td>
-              <td>
-                {input.price
-                  ? display(((input.price - input.cost) / input.price) * 100) +
-                    "%"
-                  : "N/A · Revenue = 0"}
-              </td>
-              <td>
-                {result.margin === null
-                  ? "N/A · Revenue = 0"
-                  : display(result.margin) + "%"}
-              </td>
-            </tr>
-            <tr>
-              <td>Contribution THB</td>
-              <td>{money(result.baseline)}</td>
-              <td>{money(result.contribution)}</td>
-            </tr>
-          </Table>
-          <Chart
-            rows={[
-              { date: "Baseline", contribution: result.baseline },
-              { date: "Scenario", contribution: result.contribution },
-            ]}
-            keys={["contribution"]}
-          />
-          <p>
-            Stock investment = จำนวนสั่ง × ทุน แยกจาก COGS = จำนวนขาย × ทุน ·
-            Contribution = GP − Waste − ค่าใช้จ่ายเพิ่ม · Break-even
-            เป็นความต้องการเชิงทฤษฎี อาจเกิน Supply
-          </p>
-        </>
-      )}
-    </section>
   );
 }
 function Review({ data }: { data: DashboardData }) {
@@ -527,20 +332,3 @@ function Review({ data }: { data: DashboardData }) {
     </section>
   );
 }
-
-const profitLabels: Record<string, string> = {
-  sold: "ขายได้ units",
-  desired: "Demand หลัง Uplift",
-  revenue: "ยอดขาย THB",
-  cogs: "ต้นทุนที่ขาย THB",
-  grossProfit: "กำไรขั้นต้น THB",
-  margin: "Gross Margin %",
-  investment: "เงินซื้อสต็อกเพิ่ม THB",
-  closing: "สินค้าคงเหลือ units",
-  wasteLoss: "มูลค่า Waste THB",
-  contribution: "Contribution THB",
-  baseline: "Baseline contribution THB",
-  incremental: "Incremental contribution THB",
-  breakEvenQuantity: "ยอดขายคุ้มทุน units",
-  breakEvenUplift: "Uplift คุ้มทุน %",
-};

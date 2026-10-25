@@ -476,3 +476,102 @@
     white-space: nowrap;
   }
 }
+
+/* Profit page: keep controls and help together without changing other modules. */
+.profit-margin .profit-source-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+.profit-margin .profit-input-grid,
+.profit-margin .profit-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.intelligence .profit-margin .profit-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  max-width: 100%;
+  font-size: 12px;
+}
+.profit-margin .profit-label > span {
+  min-width: 0;
+}
+.profit-margin .profit-label .info-button {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.profit-margin .profit-kpis article {
+  padding: 18px;
+  min-width: 0;
+  border: 1px solid #dce9e7;
+  border-radius: 10px;
+  background: #f6fbfa;
+}
+.profit-margin .profit-kpis strong {
+  display: block;
+  margin-top: 12px;
+  font-size: 24px;
+  overflow-wrap: anywhere;
+}
+.profit-margin .profit-source-note,
+.profit-margin .profit-warning {
+  background: #effaf8;
+  padding: 14px;
+  border-left: 4px solid #02aba4;
+  border-radius: 8px;
+}
+.profit-margin .profit-warning {
+  border-left-color: #ffc815;
+  background: #fffbed;
+}
+.profit-margin .profit-source-note p {
+  margin: 6px 0;
+}
+.profit-margin .profit-toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.profit-margin .profit-advanced,
+.profit-margin .profit-details {
+  border: 1px solid #dce9e7;
+  padding: 16px;
+  border-radius: 8px;
+}
+.profit-margin .profit-results > div {
+  padding: 12px 0;
+  border-bottom: 1px solid #dce9e7;
+}
+.profit-margin .profit-results dd {
+  margin: 8px 0;
+}
+.profit-margin .profit-details {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1100px) {
+  .profit-margin .profit-input-grid,
+  .profit-margin .profit-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 800px) {
+  .profit-margin .profit-source-grid,
+  .profit-margin .profit-input-grid,
+  .profit-margin .profit-kpis {
+    grid-template-columns: 1fr;
+  }
+}

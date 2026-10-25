@@ -505,7 +505,9 @@ export function profitScenario(input: {
   price: number;
   cost: number;
   demand: number;
-  available: number;
+  available: number | null;
+  constrainStock?: boolean;
+  baselineContribution?: number;
   order: number;
   discount: number;
   uplift: number;
@@ -530,17 +532,29 @@ export function profitScenario(input: {
     orderInTime,
   } = input;
   if (
-    Object.values(input).some(
-      (v) =>
-        typeof v === "number" && (!Number.isFinite(v) || v < 0 || v > 1e12),
+    Object.entries(input).some(
+      ([key, v]) =>
+        typeof v === "number" &&
+        (!Number.isFinite(v) ||
+          (key !== "baselineContribution" && v < 0) ||
+          Math.abs(v) > 1e12),
     ) ||
     discount > 100
   )
     throw new Error("ข้อมูล Scenario ไม่ถูกต้อง");
-  const supply = available + (orderInTime ? order : 0),
+  const supply =
+      available === null ? null : available + (orderInTime ? order : 0),
     desired = demand * (1 + uplift / 100),
-    sold = Math.min(desired, Math.max(0, supply - wasteUnits)),
-    waste = Math.min(supply, wasteUnits);
+    sellable =
+      supply === null
+        ? null
+        : Math.min(desired, Math.max(0, supply - wasteUnits)),
+    sold =
+      input.constrainStock === false || sellable === null ? desired : sellable,
+    waste =
+      input.constrainStock === false || supply === null
+        ? wasteUnits
+        : Math.min(supply, wasteUnits);
   const revenue = sold * price * (1 - discount / 100),
     cogs = sold * cost,
     grossProfit = revenue - cogs,
@@ -548,9 +562,25 @@ export function profitScenario(input: {
     wasteLoss = waste * cost,
     extra = labor + campaign + other;
   const contribution = grossProfit - wasteLoss - extra,
-    baselineSold = Math.min(demand, available),
-    baseline = baselineSold * (price - cost),
+    baselineSold =
+      available === null || input.constrainStock === false
+        ? demand
+        : Math.min(demand, available),
+    baseline = input.baselineContribution ?? baselineSold * (price - cost),
     unitContribution = price * (1 - discount / 100) - cost;
+  if (
+    [
+      desired,
+      revenue,
+      cogs,
+      grossProfit,
+      investment,
+      wasteLoss,
+      contribution,
+      baseline,
+    ].some((n) => !Number.isFinite(n) || Math.abs(n) > 1e15)
+  )
+    throw new Error("ค่าการจำลองมีขนาดสูงเกินขอบเขต");
   return {
     sold,
     desired,
@@ -558,15 +588,22 @@ export function profitScenario(input: {
     cogs,
     grossProfit,
     margin: revenue ? (grossProfit / revenue) * 100 : null,
-    investment,
-    closing: Math.max(0, supply - sold - waste),
+    investment: available === null ? null : investment,
+    sellable,
+    shortfall: sellable === null ? null : Math.max(0, desired - sellable),
+    effectivePrice: price * (1 - discount / 100),
+    unitProfit: unitContribution,
+    closing:
+      supply === null
+        ? null
+        : Math.max(0, supply - (sellable ?? 0) - Math.min(supply, waste)),
     wasteLoss,
     contribution,
     baseline,
     incremental: contribution - baseline,
     breakEvenQuantity:
       unitContribution > 0
-        ? (baseline + extra + wasteLoss) / unitContribution
+        ? Math.max(0, (baseline + extra + wasteLoss) / unitContribution)
         : null,
     breakEvenUplift:
       unitContribution > 0 && demand > 0
