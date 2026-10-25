@@ -2,7 +2,11 @@ import type { ProductCatalog } from "@/types/catalog";
 import type { Store } from "@/types";
 import { inventoryPlan } from "./calculators";
 
-export function inventoryForSku(catalog: ProductCatalog, sku: string) {
+export function inventoryForSku(
+  catalog: ProductCatalog,
+  sku: string,
+  planningMetrics = true,
+) {
   const shelves = catalog.shelfInventory.filter((r) => r.sku === sku);
   const locations = catalog.stockLocations.filter((r) => r.sku === sku);
   const plan = catalog.planning.find((r) => r.sku === sku);
@@ -33,7 +37,7 @@ export function inventoryForSku(catalog: ProductCatalog, sku: string) {
     incomingStock,
     availableStock,
     eligibleIncoming,
-    ...(plan
+    ...(plan && planningMetrics
       ? inventoryPlan(
           plan.averageDailyDemand,
           plan.leadTimeDays,

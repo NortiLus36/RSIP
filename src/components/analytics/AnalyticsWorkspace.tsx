@@ -13,11 +13,19 @@ import {
 } from "@/lib/analytics/intelligence";
 import { useForecast, usePlanningSku } from "./useForecast";
 import { useIntelligence } from "@/stores/intelligence";
-import { useExplorer } from "@/stores/explorer";
 import { WorkforcePanel } from "./WorkforcePanel";
 import { CustomerPanel } from "./CustomerPanel";
-import { InventoryPlanner } from "./InventoryPlanner";
+import { SmartInventory } from "./SmartInventory";
 import { display, money, Field, Stats, Table, Chart } from "./IntelligenceUI";
+const moduleLabels = [
+  "ภาพรวมผลการดำเนินงาน",
+  "คาดการณ์ความต้องการสินค้า",
+  "วางแผนสินค้าคงคลัง",
+  "วิเคราะห์ต้นทุนและกำไร",
+  "วิเคราะห์ช่วงเวลาเร่งด่วนและกำลังคน",
+  "ประสบการณ์และปัญหาลูกค้า",
+  "สรุปและประเมินผลการดำเนินงาน",
+];
 const modules = [
   "Store Overview",
   "คาดการณ์ความต้องการสินค้า",
@@ -43,9 +51,9 @@ export function AnalyticsWorkspace({
         <p>{data.dataset.intelligence?.sourceLabel} · THB · Asia/Bangkok</p>
       </header>
       <nav className="module-nav" aria-label="Analytics modules">
-        {modules.map((m) => (
+        {modules.map((m, i) => (
           <button key={m} aria-pressed={m === tab} onClick={() => setTab(m)}>
-            {m}
+            {moduleLabels[i]}
           </button>
         ))}
       </nav>
@@ -55,7 +63,11 @@ export function AnalyticsWorkspace({
         ) : tab === modules[1] ? (
           <DemandForecast data={data} />
         ) : tab === modules[2] ? (
-          <Inventory data={data} onExplore={onExplore} />
+          <SmartInventory
+            data={data}
+            onExplore={onExplore}
+            onForecast={() => setTab(modules[1])}
+          />
         ) : tab === modules[3] ? (
           <Profit data={data} />
         ) : tab === modules[4] ? (
@@ -67,166 +79,6 @@ export function AnalyticsWorkspace({
         )}
       </div>
     </div>
-  );
-}
-function Inventory({
-  data,
-  onExplore,
-}: {
-  data: DashboardData;
-  onExplore?: () => void;
-}) {
-  const f = useForecast(data),
-    review = useIntelligence((state) => state.reviewDays[f.ref] ?? 1),
-    [sku, setSku] = usePlanningSku(data),
-    [fixture, setFixture] = useState("");
-  let rows: NonNullable<ReturnType<typeof inventoryRecommendation>>[] = [],
-    error = f.error;
-  try {
-    rows = data.catalog.products.flatMap((p) => {
-      const r = inventoryRecommendation(data, f.rows, p.sku, review);
-      return r ? [r] : [];
-    });
-  } catch (e) {
-    error = String(e);
-  }
-  const placements = data.catalog.fixtureProducts.filter((p) => p.sku === sku),
-    selected = placements.find((p) => p.fixtureId === fixture) ?? placements[0];
-  return (
-    <section>
-      <h2>Smart Inventory</h2>
-      <p>
-        ใช้ Forecast {f.options.start} · {f.options.horizon} วัน ·{" "}
-        {f.options.scenario} · พร้อมขาย = Shelf + Backroom − Reserved ·
-        Protection = Lead time + Review days · Incoming นับเมื่อ ETA ทัน
-      </p>
-      <div className="intel-fields">
-        <Field
-          label="Review days"
-          max={7}
-          value={review}
-          onChange={(n) => useIntelligence.getState().setReviewDays(f.ref, n)}
-        />
-        <label>
-          SKU
-          <select
-            value={sku}
-            onChange={(e) => {
-              setSku(e.target.value);
-              setFixture("");
-            }}
-          >
-            {data.catalog.products.map((p) => (
-              <option key={p.sku} value={p.sku}>
-                {p.nameTh}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Fixture
-          <select
-            value={selected?.fixtureId ?? ""}
-            onChange={(e) => setFixture(e.target.value)}
-          >
-            {placements.map((p) => (
-              <option key={p.fixtureId}>{p.fixtureId}</option>
-            ))}
-          </select>
-        </label>
-        <button
-          disabled={!selected}
-          onClick={() => {
-            if (selected)
-              useExplorer.getState().selectSku(sku, selected.fixtureId);
-            onExplore?.();
-          }}
-        >
-          Focus ใน 3D
-        </button>
-      </div>
-      <p>
-        FORECAST · Dataset {f.ref} · หน่วยสินค้า · ค่าคลังและชั้นอ่านจาก
-        Snapshot ล่าสุด ไม่รวมหลายวัน
-      </p>
-      <Stats
-        items={[
-          ["Shelf units", rows.find((r) => r.sku === sku)?.shelfStock],
-          ["Backroom units", rows.find((r) => r.sku === sku)?.backroomStock],
-          [
-            "Replenishment units",
-            rows.find((r) => r.sku === sku)?.replenishment,
-          ],
-          [
-            "Suggested order units",
-            rows.find((r) => r.sku === sku)?.suggestedOrder,
-          ],
-        ]}
-      />
-      <p>
-        {rows.find((r) => r.sku === sku)?.openingStockAssumption
-          ? "SCENARIO: วันเริ่มแผนห่างจาก Snapshot สมมติสต็อกเปิดคงเดิม ไม่มีข้อมูลการเคลื่อนไหวระหว่างช่วง"
-          : ""}
-      </p>
-      {!rows.length && (
-        <p>No Data · ไม่มี Inventory ที่ใช้เป็นสต็อกเปิดของช่วง Forecast นี้</p>
-      )}
-      <p role="alert">{error}</p>
-      <Table
-        headers={[
-          "SKU",
-          "Shelf",
-          "Backroom",
-          "Reserved",
-          "Available",
-          "Incoming ทัน",
-          "Protection demand",
-          "เติมชั้น",
-          "สั่งเพิ่ม",
-          "Closing estimate",
-          "Days supply",
-          "ข้อเสนอ",
-        ]}
-      >
-        {rows.map((r) => (
-          <tr key={r.sku}>
-            <td>{r.sku}</td>
-            {[
-              r.shelfStock,
-              r.backroomStock,
-              r.reservedStock,
-              r.availableStock,
-              r.inTime,
-              r.protection,
-              r.replenishment,
-              r.suggestedOrder,
-              r.closing,
-              r.daysOfSupply,
-            ].map((v, i) => (
-              <td key={i}>{display(v)}</td>
-            ))}
-            <td>
-              {r.risk}
-              {r.extrapolated ? " · เกิน Horizon ใช้ค่าเฉลี่ย" : null}
-            </td>
-          </tr>
-        ))}
-      </Table>
-      <p>
-        เติมชั้นจำกัดตาม Display Capacity และคลังพร้อมใช้ · Closing
-        เป็นยอดรวมช่วง ไม่รับประกันว่า ETA จะป้องกันขาดของระหว่างวัน
-      </p>
-      <details>
-        <summary>
-          เครื่องคำนวณ Inventory เดิม / ปรับ Capacity และแผนต่อ SKU
-        </summary>
-        <InventoryPlanner
-          dataset={data.dataset}
-          items={data.inventory}
-          catalog={data.catalog}
-        />
-      </details>
-    </section>
   );
 }
 function Profit({ data }: { data: DashboardData }) {
@@ -254,6 +106,8 @@ function Profit({ data }: { data: DashboardData }) {
       f.rows,
       sku,
       useIntelligence.getState().reviewDays[f.ref] ?? 1,
+      undefined,
+      useIntelligence.getState().planningAssumptions[f.ref]?.[sku],
     );
   } catch (e) {
     error = String(e);

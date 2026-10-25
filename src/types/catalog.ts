@@ -31,6 +31,7 @@ export interface ShelfInventory {
 }
 // Backroom and incoming are stored once per SKU/location, never per display.
 export interface StockLocation {
+  incomingAsOf?: string;
   incomingBatches?: { quantity: number; arrivalDays: number }[];
   sku: string;
   fixtureId: string;

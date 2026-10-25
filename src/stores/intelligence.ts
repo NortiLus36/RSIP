@@ -1,5 +1,6 @@
 "use client";
 import { create } from "zustand";
+import type { InventoryAssumptions } from "@/types/inventory-planning";
 import { syncCases, type CaseStates } from "@/lib/analytics/customer";
 import type {
   ForecastOptions,
@@ -16,6 +17,7 @@ export type DemoRole =
   | "Store Staff"
   | "Digital Store Talent";
 interface Payload {
+  planningAssumptions: Record<string, Record<string, InventoryAssumptions>>;
   reviewDays: Record<string, number>;
   caseStates: CaseStates;
   reportResetAt: Record<string, string>;
@@ -29,6 +31,7 @@ interface Payload {
   actions: Record<string, ManagementAction[]>;
 }
 const empty: Payload = {
+  planningAssumptions: {},
   reviewDays: {},
   caseStates: {},
   reportResetAt: {},
@@ -46,6 +49,7 @@ interface IntelligenceState extends Payload {
   selectionAt: Record<string, number>;
   selectSku: (ref: string, sku: string) => void;
   setReviewDays: (ref: string, days: number) => void;
+  setPlanning: (ref: string, sku: string, patch: InventoryAssumptions) => void;
   ready: boolean;
   busy: boolean;
   error: string;
@@ -56,6 +60,13 @@ interface IntelligenceState extends Payload {
 }
 export const useIntelligence = create<IntelligenceState>((set, get) => ({
   ...empty,
+  setPlanning: (ref, sku, patch) =>
+    set((s) => ({
+      planningAssumptions: {
+        ...s.planningAssumptions,
+        [ref]: { ...s.planningAssumptions[ref], [sku]: patch },
+      },
+    })),
   selection: {},
   selectionAt: {},
   setReviewDays: (ref, days) =>
@@ -99,6 +110,7 @@ export const useIntelligence = create<IntelligenceState>((set, get) => ({
       const s = get(),
         payload: Payload = {
           version: 1,
+          planningAssumptions: s.planningAssumptions,
           reviewDays: s.reviewDays,
           caseStates: s.caseStates,
           reportResetAt: s.reportResetAt,

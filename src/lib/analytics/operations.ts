@@ -96,7 +96,10 @@ export function applyApprovedReports(
       const take = Math.min(transfer, loc.backroomStock - loc.reservedStock);
       loc.backroomStock -= take;
       transfer -= take;
-      if (take) loc.updatedAt = r.createdAt;
+      if (take) {
+        loc.incomingAsOf ??= loc.updatedAt;
+        loc.updatedAt = r.createdAt;
+      }
     }
     // Update the active derived snapshot view, never the persisted imported bundle.
     if (intelligence) {

@@ -190,7 +190,9 @@ export function StaffHub({ data }: { data: DashboardData }) {
       ) : tab === "My Tasks" ? (
         <section>
           <h2>My Tasks</h2>
-          <p>งานจาก Peak Time & Workforce · สถานะเชื่อม Action Planning</p>
+          <p>
+            งานจากการวางแผนกำลังคนและสินค้าคงคลัง · สถานะเชื่อม Action Planning
+          </p>
           <Table
             headers={[
               "วัน / เวลา",
@@ -261,13 +263,14 @@ export function StaffHub({ data }: { data: DashboardData }) {
         <section>
           <h2>Quick Report / Manager Review</h2>
           <label>
-            งาน Workforce ที่รายงาน (ไม่บังคับ)
+            งานที่เกี่ยวข้องกับรายงาน (ไม่บังคับ)
             <select value={taskId} onChange={(e) => setTaskId(e.target.value)}>
               <option value="">ไม่เชื่อมงาน</option>
               {s.tasks
                 .filter(
                   (t) =>
                     t.reference === ref &&
+                    t.taskType !== "PurchaseReview" &&
                     t.zoneId ===
                       data.store.fixtures.find(
                         (f) => f.id === placement?.fixtureId,

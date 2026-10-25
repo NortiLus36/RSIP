@@ -6,6 +6,7 @@ import type {
   ForecastSnapshot,
 } from "@/types/intelligence";
 import { inventoryForSku } from "./catalog";
+import type { InventoryAssumptions } from "@/types/inventory-planning";
 import { salesTotals } from "./selectors";
 import { validDate } from "@/lib/import/validate";
 export const forecastScenarioFactors = {
@@ -244,102 +245,215 @@ export function comparePeriod(
     priorTo,
   };
 }
+export function fixtureCapacity(
+  data: DashboardData,
+  sku: string,
+  fixtureId: string,
+) {
+  const placement = data.catalog.fixtureProducts.find(
+    (p) => p.sku === sku && p.fixtureId === fixtureId,
+  );
+  if (!placement) return null;
+  const raw = data.dataset.intelligence?.inventory;
+  const latest = raw
+    ?.filter((r) => r.sku === sku && r.fixtureId === fixtureId)
+    .sort((a, b) =>
+      String(a.snapshotDate).localeCompare(String(b.snapshotDate)),
+    )
+    .at(-1);
+  return raw &&
+    (!latest ||
+      latest.shelfCapacity === undefined ||
+      latest.shelfCapacity === "")
+    ? null
+    : placement.displayCapacity;
+}
 export function inventoryRecommendation(
   data: DashboardData,
   forecast: ForecastRow[],
   sku: string,
   reviewDays = 1,
   capacities?: number,
+  assumptions: InventoryAssumptions = {},
 ) {
   const planning = data.catalog.planning.find((p) => p.sku === sku),
-    stock = inventoryForSku(data.catalog, sku),
-    rows = forecast
-      .filter((r) => r.sku === sku)
-      .sort((a, b) => a.date.localeCompare(b.date));
-  if (
-    !planning ||
-    !rows.length ||
-    !data.catalog.shelfInventory.some((r) => r.sku === sku)
-  )
-    return null;
-  if (!Number.isFinite(reviewDays) || reviewDays < 0 || reviewDays > 7)
-    throw new Error("Review Days 0–7");
-  const stockDate = data.catalog.shelfInventory
+    stock = inventoryForSku(data.catalog, sku, false),
+    shelves = data.catalog.shelfInventory.filter((p) => p.sku === sku);
+  const rows = forecast
     .filter((r) => r.sku === sku)
-    .map((r) =>
-      new Date(Date.parse(r.updatedAt) + 7 * 3600000)
-        .toISOString()
-        .slice(0, 10),
-    )
+    .sort((a, b) => a.date.localeCompare(b.date));
+  if (!planning || !rows.length || !shelves.length) return null;
+  const lead = assumptions.leadTimeDays ?? planning.leadTimeDays,
+    review = assumptions.reviewDays ?? reviewDays,
+    safety = assumptions.safetyStock ?? planning.safetyStock;
+  for (const n of [
+    lead,
+    review,
+    safety,
+    ...Object.values(assumptions.capacities ?? {}),
+    ...(capacities === undefined ? [] : [capacities]),
+    ...(assumptions.dailyDemand === undefined ? [] : [assumptions.dailyDemand]),
+    ...(assumptions.incomingQuantity === undefined
+      ? []
+      : [assumptions.incomingQuantity]),
+  ])
+    if (!Number.isFinite(n) || n < 0 || n > 1e9)
+      throw Error("ค่าการวางแผนต้องเป็นตัวเลขไม่ติดลบและไม่เกิน1,000,000,000");
+  if (!Number.isInteger(review) || review > 7)
+    throw Error("Review Days 0–7 และต้องเป็นจำนวนเต็ม");
+  if (!Number.isInteger(lead) || lead > 365)
+    throw Error("ระยะเวลารอสินค้าเป็นจำนวนเต็ม0–365วัน");
+  if (
+    rows.some(
+      (r) =>
+        !validDate(r.date) || !Number.isFinite(r.quantity) || r.quantity < 0,
+    ) ||
+    new Set(rows.map((r) => r.date)).size !== rows.length
+  )
+    throw Error("Forecast ราย SKU/วันไม่ถูกต้องหรือซ้ำ");
+  const day = (timestamp: string) =>
+    new Date(Date.parse(timestamp) + 7 * 3600000).toISOString().slice(0, 10);
+  const stockDate = shelves
+    .map((r) => day(r.updatedAt))
     .sort()
     .at(-1)!;
-  // A later stock snapshot cannot serve as historical opening stock.
   if (stockDate > rows[0].date) return null;
-  const elapsed = Math.max(
-    0,
-    Math.round((Date.parse(rows[0].date) - Date.parse(stockDate)) / 86400000) -
-      1,
+  const start = rows[0].date,
+    end = rows.at(-1)!.date,
+    horizon = Math.round((Date.parse(end) - Date.parse(start)) / 86400000) + 1;
+  if (horizon > 366) throw Error("ช่วงForecastยาวเกินขอบเขต");
+  const daily =
+      assumptions.dailyDemand ??
+      rows.reduce((sum, r) => sum + r.quantity, 0) / rows.length,
+    coverageDays = lead + review;
+  let estimatedDays = 0;
+  const demandOn = (i: number) => {
+    if (assumptions.dailyDemand !== undefined) return daily;
+    const r = rows.find((r) => r.date === dateAdd(start, i));
+    if (r) return r.quantity;
+    estimatedDays++;
+    return daily;
+  };
+  const protection = Array.from({ length: coverageDays }, (_, i) =>
+    demandOn(i),
+  ).reduce((sum, q) => sum + q, 0);
+  const horizonDemand = Array.from(
+    { length: horizon },
+    (_, i) =>
+      assumptions.dailyDemand ??
+      rows.find((r) => r.date === dateAdd(start, i))?.quantity ??
+      daily,
   );
-  const horizon = rows.length,
-    coverageDays = planning.leadTimeDays + reviewDays;
-  const daily = rows.reduce((s, r) => s + r.quantity, 0) / horizon;
-  const protection = Array.from(
-    { length: Math.ceil(coverageDays) },
-    (_, i) => rows[i]?.quantity ?? daily,
-  ).reduce((s, v) => s + v, 0);
-  const inTime = data.catalog.stockLocations
-    .filter((r) => r.sku === sku)
-    .reduce(
-      (s, l) =>
-        s +
-        (l.incomingBatches
-          ? l.incomingBatches
-              .filter((b) => b.arrivalDays <= elapsed + coverageDays)
-              .reduce((v, b) => v + b.quantity, 0)
-          : l.incomingArrivalDays <= elapsed + coverageDays
-            ? l.incomingStock
-            : 0),
-      0,
+  const demand = horizonDemand.reduce((sum, q) => sum + q, 0),
+    firstDemand = horizonDemand[0];
+  const locations = data.catalog.stockLocations.filter((l) => l.sku === sku);
+  const batches =
+    assumptions.incomingQuantity !== undefined
+      ? (() => {
+          if (!validDate(assumptions.incomingEta ?? ""))
+            throw Error("กรุณาระบุวันที่คาดว่าจะได้รับสินค้าให้ถูกต้อง");
+          return [
+            {
+              quantity: assumptions.incomingQuantity,
+              eta: assumptions.incomingEta!,
+            },
+          ];
+        })()
+      : locations.flatMap((l) => {
+          const basis = day(l.incomingAsOf ?? l.updatedAt);
+          return (
+            l.incomingBatches ?? [
+              { quantity: l.incomingStock, arrivalDays: l.incomingArrivalDays },
+            ]
+          )
+            .filter((b) => b.quantity > 0)
+            .map((b) => ({
+              quantity: b.quantity,
+              eta:
+                b.arrivalDays > 36600
+                  ? ""
+                  : dateAdd(basis, Math.ceil(b.arrivalDays)),
+            }));
+        });
+  const eligible = (days: number) =>
+    days === 0
+      ? 0
+      : batches
+          .filter((b) => b.eta && b.eta <= dateAdd(start, days - 1))
+          .reduce((sum, b) => sum + b.quantity, 0);
+  const inTime = eligible(coverageDays),
+    eligibleHorizon = eligible(horizon);
+  const placements = data.catalog.fixtureProducts.filter((p) => p.sku === sku);
+  const legacyTotal = placements.reduce((sum, p) => sum + p.displayCapacity, 0);
+  const refills = placements.map((p) => {
+    const shelf = shelves.find((x) => x.fixtureId === p.fixtureId);
+    const explicit = assumptions.capacities?.[p.fixtureId];
+    const cap =
+      explicit ??
+      (capacities !== undefined
+        ? capacities *
+          (legacyTotal
+            ? p.displayCapacity / legacyTotal
+            : 1 / placements.length)
+        : fixtureCapacity(data, sku, p.fixtureId));
+    return {
+      fixtureId: p.fixtureId,
+      shelfStock: shelf?.shelfStock ?? null,
+      capacity: cap,
+      target: 0,
+      replenishment: cap === null || !shelf ? null : 0,
+    };
+  });
+  const capacity = refills.reduce((sum, p) => sum + (p.capacity ?? 0), 0),
+    target = Math.min(
+      Math.ceil(firstDemand),
+      refills.reduce((sum, p) => sum + Math.floor(p.capacity ?? 0), 0),
     );
-  const eligibleHorizon = data.catalog.stockLocations
-    .filter((r) => r.sku === sku)
-    .reduce(
-      (s, l) =>
-        s +
-        (l.incomingBatches
-          ? l.incomingBatches
-              .filter((b) => b.arrivalDays <= elapsed + horizon)
-              .reduce((v, b) => v + b.quantity, 0)
-          : l.incomingArrivalDays <= elapsed + horizon
-            ? l.incomingStock
-            : 0),
-      0,
-    );
-  const capacity =
-    capacities ??
-    data.catalog.fixtureProducts
-      .filter((r) => r.sku === sku)
-      .reduce((s, r) => s + r.displayCapacity, 0);
-  const replenishment = Math.max(
+  const shares = refills
+    .filter((p) => p.capacity !== null && p.shelfStock !== null)
+    .map((p) => ({
+      p,
+      exact: capacity ? (target * p.capacity!) / capacity : 0,
+    }));
+  shares.forEach(({ p, exact }) => (p.target = Math.floor(exact)));
+  let remaining = target - shares.reduce((sum, { p }) => sum + p.target, 0);
+  for (const { p } of shares.sort(
+    (a, b) =>
+      b.exact - Math.floor(b.exact) - (a.exact - Math.floor(a.exact)) ||
+      a.p.fixtureId.localeCompare(b.p.fixtureId),
+  ))
+    if (remaining > 0 && p.target < Math.floor(p.capacity!)) {
+      p.target++;
+      remaining--;
+    }
+  let backroomAvailable = Math.max(
     0,
-    Math.min(
-      Math.max(
-        0,
-        stock.backroomStock -
-          data.catalog.stockLocations
-            .filter((l) => l.sku === sku)
-            .reduce((s, l) => s + l.reservedStock, 0),
+    stock.backroomStock -
+      locations.reduce((sum, l) => sum + l.reservedStock, 0),
+  );
+  for (const p of [...refills].sort(
+    (a, b) =>
+      (a.shelfStock ?? Infinity) - (b.shelfStock ?? Infinity) ||
+      a.fixtureId.localeCompare(b.fixtureId),
+  )) {
+    if (p.replenishment === null) continue;
+    p.replenishment = Math.max(
+      0,
+      Math.min(
+        backroomAvailable,
+        Math.max(0, p.capacity! - p.shelfStock!),
+        p.target - p.shelfStock!,
       ),
-      Math.max(0, Math.min(capacity, rows[0].quantity) - stock.shelfStock),
-    ),
-  );
-  const suggestedOrder = Math.ceil(
-    Math.max(
+    );
+    backroomAvailable -= p.replenishment;
+  }
+  const replenishment = refills.reduce(
+      (sum, p) => sum + (p.replenishment ?? 0),
       0,
-      protection + planning.safetyStock - stock.availableStock - inTime,
     ),
-  );
-  const demand = rows.reduce((s, r) => s + r.quantity, 0),
+    suggestedOrder = Math.ceil(
+      Math.max(0, protection + safety - stock.availableStock - inTime),
+    ),
     available = stock.availableStock + eligibleHorizon;
   return {
     ...stock,
@@ -348,7 +462,7 @@ export function inventoryRecommendation(
     protection,
     coverageDays,
     stockDate,
-    openingStockAssumption: elapsed > 0,
+    openingStockAssumption: start > dateAdd(stockDate, 1),
     inTime,
     eligibleHorizon,
     capacity,
@@ -357,9 +471,7 @@ export function inventoryRecommendation(
     daysOfSupply: daily ? stock.availableStock / daily : null,
     closing: Math.max(
       0,
-      available +
-        (planning.leadTimeDays <= horizon ? suggestedOrder : 0) -
-        demand,
+      available + (lead <= horizon ? suggestedOrder : 0) - demand,
     ),
     risk:
       stock.shelfStock === 0 && stock.backroomStock > 0
@@ -369,7 +481,24 @@ export function inventoryRecommendation(
           : daily && stock.availableStock / daily > 30
             ? "Overstock > 30 วัน"
             : "Monitor",
-    extrapolated: coverageDays > horizon,
+    extrapolated: estimatedDays > 0,
+    estimatedDays,
+    horizonEstimatedDays:
+      assumptions.dailyDemand === undefined
+        ? horizonDemand.filter(
+            (_, i) => !rows.some((r) => r.date === dateAdd(start, i)),
+          ).length
+        : 0,
+    leadTimeDays: lead,
+    reviewDays: review,
+    safetyStock: safety,
+    dailyDemand: daily,
+    refills,
+    batches,
+    hasMissingCapacity: refills.some((p) => p.capacity === null),
+    forecastAssumption:
+      rows.some((r) => r.manual) || assumptions.dailyDemand !== undefined,
+    horizon,
   };
 }
 export function profitScenario(input: {

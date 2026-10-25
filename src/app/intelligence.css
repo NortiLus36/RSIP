@@ -361,3 +361,118 @@
     font-size: 22px;
   }
 }
+
+/* Smart Inventory only: one engine, fixture-aware cards and inline help. */
+.smart-inventory .inventory-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+  align-items: start;
+}
+.intelligence .smart-inventory .inventory-label {
+  display: inline-flex;
+  white-space: nowrap;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  max-width: 100%;
+  font-size: 12px;
+}
+.smart-inventory .inventory-label > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.smart-inventory .inventory-label .info-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 50%;
+}
+.smart-inventory .inventory-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.smart-inventory .inventory-kpis article {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #dce9e7;
+  border-radius: 10px;
+  background: #f6fbfa;
+}
+.smart-inventory .inventory-kpis strong {
+  display: block;
+  font-size: 24px;
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+.smart-inventory .inventory-advice {
+  padding: 16px;
+  border-left: 4px solid #02aba4;
+  background: #effaf8;
+  border-radius: 8px;
+}
+.smart-inventory .inventory-advice h3 {
+  margin: 0 0 8px;
+}
+.smart-inventory .inventory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.smart-inventory .inventory-forecast p,
+.smart-inventory .inventory-advice p {
+  margin: 8px 0;
+}
+.smart-inventory .inventory-filter {
+  max-width: 320px;
+}
+.smart-inventory .inventory-toggle {
+  flex-direction: row;
+  align-items: center;
+}
+.smart-inventory .inventory-calculation dl > div {
+  padding: 10px 0;
+  border-bottom: 1px solid #dce9e7;
+}
+.smart-inventory .inventory-calculation dd {
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.smart-inventory .inventory-calculation,
+.smart-inventory .inventory-advanced {
+  padding: 16px;
+  border: 1px solid #dce9e7;
+  border-radius: 8px;
+}
+@media (max-width: 1100px) {
+  .smart-inventory .inventory-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .smart-inventory .inventory-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 800px) {
+  .smart-inventory .inventory-fields {
+    grid-template-columns: 1fr;
+  }
+  .smart-inventory .inventory-kpis {
+    grid-template-columns: 1fr;
+  }
+  .intelligence .module-nav {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  .intelligence .module-nav button {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}

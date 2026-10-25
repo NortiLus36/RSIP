@@ -167,6 +167,7 @@ export class ImportedDataProvider {
           (Date.parse(String(r.eta)) - Date.parse(inventoryDate ?? asOf)) /
             86400000,
         );
+        loc.incomingAsOf = `${inventoryDate ?? asOf.slice(0, 10)}T00:00:00+07:00`;
         loc.incomingStock += Number(r.quantity);
         loc.incomingBatches!.push({
           quantity: Number(r.quantity),

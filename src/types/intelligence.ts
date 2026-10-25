@@ -51,6 +51,13 @@ export interface ForecastSnapshot {
   backtest: boolean;
 }
 export interface StaffTask {
+  taskType?: "Replenishment" | "PurchaseReview";
+  productName?: string;
+  quantity?: number;
+  unit?: string;
+  inventoryReference?: string;
+  forecastReference?: string;
+  dedupKey?: string;
   laborCost?: number;
   id: string;
   actionId: string;
